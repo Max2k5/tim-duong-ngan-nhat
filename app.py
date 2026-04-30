@@ -66,6 +66,7 @@ if st.session_state.nodes:
 net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
 
 # Cấu hình Interaction & Tắt Physics
+# Cấu hình Interaction & Font thông minh hơn
 net.set_options("""
 {
   "interaction": {
@@ -77,15 +78,18 @@ net.set_options("""
     "font": {
       "size": 16,
       "face": "arial",
-      "background": "white"
+      "multi": true,
+      "strokeWidth": 3,
+      "strokeColor": "#ffffff"
     }
   },
   "edges": {
     "font": {
       "align": "top",
-      "background": "white",
       "size": 14,
-      "strokeWidth": 0
+      "strokeWidth": 4,
+      "strokeColor": "#ffffff",
+      "color": "#000000"
     },
     "color": { "inherit": false }
   },
