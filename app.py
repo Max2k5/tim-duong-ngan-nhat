@@ -3,13 +3,13 @@ import networkx as nx
 from pyvis.network import Network
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Toán Đồ Thị", layout="wide")
+st.set_page_config(page_title="Toán Đồ Thị Trực Quan", layout="wide")
 
-# CSS để giao diện mượt hơn
+# CSS tối ưu giao diện
 st.markdown("""
     <style>
-    .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; }
-    iframe { border: 1px solid #ddd; border-radius: 10px; }
+    .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; background-color: #f0f2f6; }
+    iframe { border: 1px solid #eee; border-radius: 15px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -18,7 +18,7 @@ if 'edges' not in st.session_state:
 if 'nodes' not in st.session_state:
     st.session_state.nodes = set()
 
-st.title("📍 Hệ Thống Tìm Đường (Bản Full Zoom)")
+st.title("📍 Hệ Thống Tìm Đường (Chống chồng chữ)")
 
 # --- 1. NHẬP LIỆU ---
 with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
@@ -63,59 +63,69 @@ if st.session_state.nodes:
                 st.error("Không có đường nối!")
 
 # --- 3. VẼ ĐỒ THỊ ---
-# Bật lại tính năng Zoom và các nút điều hướng
 net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
 
-# Cấu hình Interaction để cho phép Zoom
+# Cấu hình Interaction & Tắt Physics
 net.set_options("""
 {
   "interaction": {
     "zoomView": true,
     "dragView": true,
-    "navigationButtons": true,
-    "multiselect": true
+    "navigationButtons": true
   },
-  "physics": {
-    "enabled": false
-  }
+  "nodes": {
+    "font": {
+      "size": 16,
+      "face": "arial",
+      "background": "white"
+    }
+  },
+  "edges": {
+    "font": {
+      "align": "top",
+      "background": "white",
+      "size": 14,
+      "strokeWidth": 0
+    },
+    "color": { "inherit": false }
+  },
+  "physics": { "enabled": false }
 }
 """)
 
-# Thêm điểm
+# Thêm điểm (Node)
 for node in st.session_state.nodes:
-    is_start_end = (len(path_nodes) > 0 and (node == path_nodes[0] or node == path_nodes[-1]))
-    color = "#FF1E1E" if is_start_end else ("#FF4B4B" if node in path_nodes else "#2196F3")
-    net.add_node(node, label=node, color=color, size=35 if is_start_end else 25)
+    on_path = node in path_nodes
+    color = "#FF1E1E" if on_path else "#2196F3"
+    # Dùng nhãn nằm trên/dưới nút để tránh bị cạnh đè
+    net.add_node(node, label=node, color=color, size=25, font={'color': color, 'weight': 'bold'})
 
-# Thêm cạnh (Xử lý đường cong khi có nhiều đường nối)
+# Thêm đường nối (Edge)
 pair_tracker = {}
 for e in st.session_state.edges:
     pair = tuple(sorted((e['from'], e['to'])))
     pair_tracker[pair] = pair_tracker.get(pair, 0) + 1
     
-    # Tạo độ cong khác nhau cho các đường nối song song
+    # Độ cong cho các đường song song
     smooth = {"type": "curvedCW", "roundness": 0.0}
     if pair_tracker[pair] > 1:
-        smooth["roundness"] = 0.2 * (pair_tracker[pair] - 1)
+        smooth["roundness"] = 0.25 * (pair_tracker[pair] - 1)
 
     on_path = e['id'] in best_edge_ids
     net.add_edge(
         e['from'], e['to'], 
-        label=str(e['weight']), 
-        color="#FF1E1E" if on_path else "#ABB2B9",
+        label=f" {str(e['weight'])} ", # Thêm khoảng trắng để dễ nhìn
+        color="#FF1E1E" if on_path else "#D3D3D3",
         width=7 if on_path else 2,
-        smooth=smooth
+        smooth=smooth,
+        font={'background': 'white'} # Tạo khung trắng cho con số
     )
 
-# Nút chức năng phụ
-c_1, c_2 = st.columns(2)
-with c_1:
-    if st.button("🗑️ Xóa toàn bộ"):
-        st.session_state.edges = []
-        st.session_state.nodes = set()
-        st.rerun()
-with c_2:
-    st.info("💡 Mẹo: Bạn có thể dùng con trỏ chuột để phóng to/thu nhỏ và kéo các điểm đi mọi nơi.")
+# Nút Xóa
+if st.button("🗑️ Xóa sạch đồ thị"):
+    st.session_state.edges = []
+    st.session_state.nodes = set()
+    st.rerun()
 
-net.save_graph("graph_full.html")
-components.html(open("graph_full.html", 'r', encoding='utf-8').read(), height=650)
+net.save_graph("graph_clean.html")
+components.html(open("graph_clean.html", 'r', encoding='utf-8').read(), height=650)
