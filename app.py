@@ -18,7 +18,7 @@ if 'edges' not in st.session_state:
 if 'nodes' not in st.session_state:
     st.session_state.nodes = set()
 
-st.title("📍 Hệ Thống Tìm Đường (Chống chồng chữ)")
+st.title("📍 Tìm đường đi trọng số ngắn nhất")
 
 # --- 1. NHẬP LIỆU ---
 with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
