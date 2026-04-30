@@ -71,12 +71,25 @@ net.set_options("""
   "interaction": {
     "zoomView": true,
     "dragView": true,
-    "navigationButtons": true,
-    "multiselect": true
+    "navigationButtons": true
   },
-  "physics": {
-    "enabled": false
-  }
+  "nodes": {
+    "font": {
+      "size": 16,
+      "face": "arial",
+      "background": "white"
+    }
+  },
+  "edges": {
+    "font": {
+      "align": "top",
+      "background": "white",
+      "size": 14,
+      "strokeWidth": 0
+    },
+    "color": { "inherit": false }
+  },
+  "physics": { "enabled": false }
 }
 """)
 
