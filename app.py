@@ -2,6 +2,7 @@ import streamlit as st
 import networkx as nx
 from pyvis.network import Network
 import streamlit.components.v1 as components
+import random
 
 st.set_page_config(page_title="Toán Đồ Thị Trực Quan", layout="wide")
 
@@ -13,12 +14,15 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# Khởi tạo session state
 if 'edges' not in st.session_state:
     st.session_state.edges = [] 
 if 'nodes' not in st.session_state:
     st.session_state.nodes = set()
+if 'node_coords' not in st.session_state:
+    st.session_state.node_coords = {} # Lưu tọa độ x, y cố định
 
-st.title("📍 Tìm đường đi có trọng số ngắn nhất")
+st.title("📍 Tìm đường đi ngắn nhất (Hình ảnh cố định)")
 
 # --- 1. NHẬP LIỆU ---
 with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
@@ -27,25 +31,34 @@ with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
     v = c2.text_input("Đến điểm", placeholder="B").upper().strip()
     w = c3.number_input("Khoảng cách", min_value=0.1, value=5.0)
     
-    if st.button("Thêm đường nối"):
+    if st.button("Xác nhận nối đường"):
         if u and v and u != v:
             edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
             st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id})
-            st.session_state.nodes.add(u)
-            st.session_state.nodes.add(v)
+            
+            # Nếu điểm chưa có tọa độ, cấp cho nó một vị trí ngẫu nhiên cố định
+            for node in [u, v]:
+                if node not in st.session_state.nodes:
+                    st.session_state.nodes.add(node)
+                    st.session_state.node_coords[node] = {
+                        'x': random.randint(-400, 400),
+                        'y': random.randint(-400, 400)
+                    }
             st.rerun()
 
-# --- 2. TÍNH TOÁN ---
+# --- 2. TÍNH TOÁN (Dijkstra) ---
 path_nodes = []
 best_edge_ids = []
 
 if st.session_state.nodes:
-    with st.expander("🚩 TÌM ĐƯỜNG NGẮN NHẤT"):
+    with st.expander("🚩 TÌM ĐƯỜNG NGẮN NHẤT", expanded=True):
         col_s, col_e = st.columns(2)
         start_n = col_s.selectbox("Điểm xuất phát", sorted(list(st.session_state.nodes)))
         end_n = col_e.selectbox("Điểm đích", sorted(list(st.session_state.nodes)))
         
-        if st.button("🚀 Tìm!!"):
+        # Ở đây ta không dùng st.button làm trigger rerun cho cả trang 
+        # mà chỉ để cập nhật biến path_nodes cho lần render này
+        if st.button("🚀 Chạy Dijkstra"):
             G = nx.MultiGraph()
             for e in st.session_state.edges:
                 G.add_edge(e['from'], e['to'], weight=e['weight'], id=e['id'])
@@ -65,7 +78,7 @@ if st.session_state.nodes:
 # --- 3. VẼ ĐỒ THỊ ---
 net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
 
-# Cấu hình Interaction & Tắt Physics
+# Quan trọng: Tắt hoàn toàn physics để các điểm đứng im tại tọa độ ta cấp
 net.set_options("""
 {
   "interaction": {
@@ -73,32 +86,25 @@ net.set_options("""
     "dragView": true,
     "navigationButtons": true
   },
-  "nodes": {
-    "font": {
-      "size": 16,
-      "face": "arial",
-      "background": "white"
-    }
-  },
-  "edges": {
-    "font": {
-      "align": "top",
-      "background": "white",
-      "size": 14,
-      "strokeWidth": 0
-    },
-    "color": { "inherit": false }
-  },
   "physics": { "enabled": false }
 }
 """)
 
-# Thêm điểm (Node)
+# Thêm điểm (Node) với tọa độ cố định
 for node in st.session_state.nodes:
     on_path = node in path_nodes
     color = "#FF1E1E" if on_path else "#2196F3"
-    # Dùng nhãn nằm trên/dưới nút để tránh bị cạnh đè
-    net.add_node(node, label=node, color=color, size=25, font={'color': color, 'weight': 'bold'})
+    coords = st.session_state.node_coords[node]
+    
+    net.add_node(
+        node, 
+        label=node, 
+        color=color, 
+        size=25, 
+        x=coords['x'], # Tọa độ X cố định
+        y=coords['y'], # Tọa độ Y cố định
+        font={'color': color, 'weight': 'bold', 'background': 'white'}
+    )
 
 # Thêm đường nối (Edge)
 pair_tracker = {}
@@ -106,7 +112,6 @@ for e in st.session_state.edges:
     pair = tuple(sorted((e['from'], e['to'])))
     pair_tracker[pair] = pair_tracker.get(pair, 0) + 1
     
-    # Độ cong cho các đường song song
     smooth = {"type": "curvedCW", "roundness": 0.0}
     if pair_tracker[pair] > 1:
         smooth["roundness"] = 0.25 * (pair_tracker[pair] - 1)
@@ -114,18 +119,20 @@ for e in st.session_state.edges:
     on_path = e['id'] in best_edge_ids
     net.add_edge(
         e['from'], e['to'], 
-        label=f" {str(e['weight'])} ", # Thêm khoảng trắng để dễ nhìn
+        label=f" {str(e['weight'])} ",
         color="#FF1E1E" if on_path else "#D3D3D3",
         width=7 if on_path else 2,
         smooth=smooth,
-        font={'background': 'white'} # Tạo khung trắng cho con số
+        font={'background': 'white', 'size': 14}
     )
 
 # Nút Xóa
 if st.button("🗑️ Xóa sạch đồ thị"):
     st.session_state.edges = []
     st.session_state.nodes = set()
+    st.session_state.node_coords = {}
     st.rerun()
 
+# Lưu và hiển thị
 net.save_graph("graph_clean.html")
 components.html(open("graph_clean.html", 'r', encoding='utf-8').read(), height=650)
