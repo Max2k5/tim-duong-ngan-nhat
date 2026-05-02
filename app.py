@@ -73,7 +73,7 @@ if st.session_state.nodes:
 
 st.write("---")
 col_util1, col_util2 = st.columns([1, 1])
-if col_util2.button("🗑️ XÓA ĐỒ THỊ", key="clear_btn"):
+if col_util1.button("🗑️ XÓA ĐỒ THỊ", key="clear_btn"):
     st.session_state.edges, st.session_state.nodes = [], set()
     components.html("<script>localStorage.clear(); window.parent.location.reload();</script>")
     st.rerun()
