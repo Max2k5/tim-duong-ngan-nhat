@@ -9,40 +9,17 @@ st.set_page_config(page_title="Tìm Đường Thông Minh", layout="wide")
 st.markdown("""
     <style>
     .main, .stApp { background-color: #FFFFFF !important; }
-    
-    /* Nút bấm chính */
     .stButton>button {
-        width: 100%;
-        height: 3.5em;
-        border-radius: 12px;
-        font-weight: bold;
-        background-color: #007bff !important;
-        color: white !important;
-        border: none;
+        width: 100%; height: 3.5em; border-radius: 12px;
+        font-weight: bold; background-color: #007bff !important; color: white !important;
     }
-    
-    /* Nút Căn giữa (màu xanh lá) */
-    div.stButton > button[key="fit_btn"] {
-        background-color: #28a745 !important;
-        height: 2.5em;
-        margin-bottom: 10px;
-    }
-
-    /* Nút Xóa (màu đỏ) */
-    div.stButton > button[key="clear_btn"] {
-        background-color: #dc3545 !important;
-    }
-
+    div.stButton > button[key="fit_btn"] { background-color: #28a745 !important; height: 2.5em; margin-bottom: 10px; }
+    div.stButton > button[key="clear_btn"] { background-color: #dc3545 !important; }
     input { height: 3em !important; font-size: 16px !important; }
-    
     .result-box {
-        background-color: #f8f9fa;
-        padding: 15px;
-        border-radius: 12px;
-        border: 1px solid #dee2e6;
-        margin: 10px 0;
+        background-color: #f8f9fa; padding: 15px; border-radius: 12px;
+        border: 1px solid #dee2e6; margin: 10px 0;
     }
-    
     iframe { border: 1px solid #ddd !important; border-radius: 15px; }
     </style>
     """, unsafe_allow_html=True)
@@ -52,7 +29,7 @@ if 'edges' not in st.session_state:
 if 'nodes' not in st.session_state:
     st.session_state.nodes = set()
 
-st.title("📍 Công Cụ Tìm Đường")
+st.title("📍 Đồ Thị Cố Định (Không Vật Lý)")
 
 # --- 2. NHẬP LIỆU ---
 with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
@@ -69,9 +46,10 @@ with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
             st.session_state.nodes.add(v)
             st.rerun()
 
-# --- 3. TÌM ĐƯỜNG & KẾT QUẢ ---
+# --- 3. TÍNH TOÁN ---
 path_nodes = []
 best_edge_ids = []
+total_dist = 0
 
 if st.session_state.nodes:
     with st.expander("🚩 TÌM ĐƯỜNG NGẮN NHẤT", expanded=True):
@@ -86,7 +64,6 @@ if st.session_state.nodes:
             try:
                 path_nodes = nx.shortest_path(G, source=start_node, target=end_node, weight='weight')
                 total_dist = nx.shortest_path_length(G, source=start_node, target=end_node, weight='weight')
-                
                 for i in range(len(path_nodes)-1):
                     u_n, v_n = path_nodes[i], path_nodes[i+1]
                     all_e = [e for e in st.session_state.edges if (e['from']==u_n and e['to']==v_n) or (e['from']==v_n and e['to']==u_n)]
@@ -101,18 +78,19 @@ if st.session_state.nodes:
             except:
                 st.error("Không có đường nối!")
 
-# --- 4. VẼ ĐỒ THỊ + NÚT ĐIỀU HƯỚNG ---
+# --- 4. VẼ ĐỒ THỊ ---
 st.write("---")
-# Nút Fit View nhanh (Căn giữa)
 if st.button("🎯 CĂN GIỮA HÌNH VẼ", key="fit_btn"):
     components.html("<script>localStorage.removeItem('graphView'); window.parent.location.reload();</script>", height=0)
 
 net = Network(height="550px", width="100%", bgcolor="#ffffff", font_color="black")
-net.toggle_physics(False)
 
-# KÍCH HOẠT NÚT ĐIỀU HƯỚNG MẶC ĐỊNH
+# KHÓA CHẶT PHYSICS Ở ĐÂY
 net.set_options("""
 {
+  "physics": {
+    "enabled": false
+  },
   "interaction": {
     "navigationButtons": true,
     "keyboard": true,
@@ -140,25 +118,19 @@ for e in st.session_state.edges:
                  smooth={"type": "curvedCW", "roundness": 0.2 * (pair_tracker[pair]-1) if pair_tracker[pair]>1 else 0},
                  font={'background': 'white', 'size': 14})
 
-# Script JavaScript để lưu vị trí và Zoom
+# Script JavaScript giữ vị trí
 raw_html = net.generate_html()
 custom_js = """
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
-        // Khôi phục vị trí các điểm
         var savedCoords = JSON.parse(localStorage.getItem('nodePositions') || '{}');
         Object.keys(savedCoords).forEach(function(nodeId) {
             network.moveNode(nodeId, savedCoords[nodeId].x, savedCoords[nodeId].y);
         });
-
-        // Khôi phục góc nhìn (Zoom/Pan)
         var savedView = JSON.parse(localStorage.getItem('graphView') || '{}');
-        if(savedView.scale) {
-            network.moveTo({position: savedView.position, scale: savedView.scale});
-        }
+        if(savedView.scale) { network.moveTo({position: savedView.position, scale: savedView.scale}); }
 
-        // Lưu vị trí khi kéo điểm
         network.on("dragEnd", function(params) {
             if (params.nodes.length > 0) {
                 var nodeId = params.nodes[0];
@@ -168,8 +140,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('nodePositions', JSON.stringify(currentCoords));
             }
         });
-
-        // Lưu góc nhìn khi Zoom hoặc Di chuyển sơ đồ
         network.on("moveEnd", function() {
             localStorage.setItem('graphView', JSON.stringify({
                 position: network.getViewPosition(),
@@ -183,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
 final_html = raw_html.replace("</body>", custom_js + "</body>")
 components.html(final_html, height=600)
 
-# Nút Xóa sạch
 if st.button("🗑️ XÓA SẠCH DỮ LIỆU", key="clear_btn"):
     st.session_state.edges = []
     st.session_state.nodes = set()
