@@ -2,137 +2,134 @@ import streamlit as st
 import networkx as nx
 from pyvis.network import Network
 import streamlit.components.v1 as components
-import random
 
-st.set_page_config(page_title="Toán Đồ Thị Trực Quan", layout="wide")
+st.set_page_config(page_title="Đồ Thị Thông Minh", layout="wide")
 
-# CSS tối ưu giao diện
+# CSS cho giao diện sạch sẽ
 st.markdown("""
     <style>
-    .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; background-color: #f0f2f6; }
-    iframe { border: 1px solid #eee; border-radius: 15px; }
+    .main, .stApp { background-color: white !important; }
+    .stButton>button { width: 100%; border-radius: 10px; background-color: #007bff; color: white; }
+    iframe { border: 1px solid #ddd; border-radius: 15px; }
     </style>
     """, unsafe_allow_html=True)
 
-# Khởi tạo session state
 if 'edges' not in st.session_state:
     st.session_state.edges = [] 
 if 'nodes' not in st.session_state:
     st.session_state.nodes = set()
-if 'node_coords' not in st.session_state:
-    st.session_state.node_coords = {} # Lưu tọa độ x, y cố định
 
-st.title("📍 Tìm đường đi ngắn nhất (Hình ảnh cố định)")
+st.title("📍 Đồ Thị Ghi Nhớ Vị Trí")
 
 # --- 1. NHẬP LIỆU ---
-with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
-    c1, c2, c3 = st.columns([1, 1, 1])
-    u = c1.text_input("Từ điểm", placeholder="A").upper().strip()
-    v = c2.text_input("Đến điểm", placeholder="B").upper().strip()
-    w = c3.number_input("Khoảng cách", min_value=0.1, value=5.0)
+with st.sidebar:
+    st.header("➕ Thêm dữ liệu")
+    u = st.text_input("Từ điểm").upper().strip()
+    v = st.text_input("Đến điểm").upper().strip()
+    w = st.number_input("Khoảng cách", min_value=0.1, value=5.0)
     
-    if st.button("Xác nhận nối đường"):
+    if st.button("Nối đường"):
         if u and v and u != v:
             edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
             st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id})
-            
-            # Nếu điểm chưa có tọa độ, cấp cho nó một vị trí ngẫu nhiên cố định
-            for node in [u, v]:
-                if node not in st.session_state.nodes:
-                    st.session_state.nodes.add(node)
-                    st.session_state.node_coords[node] = {
-                        'x': random.randint(-400, 400),
-                        'y': random.randint(-400, 400)
-                    }
+            st.session_state.nodes.add(u)
+            st.session_state.nodes.add(v)
             st.rerun()
 
-# --- 2. TÍNH TOÁN (Dijkstra) ---
+    if st.button("🗑️ Xóa toàn bộ"):
+        st.session_state.edges = []
+        st.session_state.nodes = set()
+        # Xóa luôn bộ nhớ vị trí trong trình duyệt
+        components.html("<script>localStorage.clear(); window.parent.location.reload();</script>")
+        st.rerun()
+
+# --- 2. TÍNH TOÁN ĐƯỜNG ĐI ---
 path_nodes = []
 best_edge_ids = []
 
-if st.session_state.nodes:
-    with st.expander("🚩 TÌM ĐƯỜNG NGẮN NHẤT", expanded=True):
-        col_s, col_e = st.columns(2)
-        start_n = col_s.selectbox("Điểm xuất phát", sorted(list(st.session_state.nodes)))
-        end_n = col_e.selectbox("Điểm đích", sorted(list(st.session_state.nodes)))
-        
-        # Ở đây ta không dùng st.button làm trigger rerun cho cả trang 
-        # mà chỉ để cập nhật biến path_nodes cho lần render này
-        if st.button("🚀 Chạy Dijkstra"):
-            G = nx.MultiGraph()
-            for e in st.session_state.edges:
-                G.add_edge(e['from'], e['to'], weight=e['weight'], id=e['id'])
-            try:
-                path_nodes = nx.shortest_path(G, source=start_n, target=end_n, weight='weight')
-                dist = nx.shortest_path_length(G, source=start_n, target=end_n, weight='weight')
-                st.success(f"Đường đi: {' ➔ '.join(path_nodes)} | Tổng: {dist}")
-                
-                for i in range(len(path_nodes)-1):
-                    u_n, v_n = path_nodes[i], path_nodes[i+1]
-                    all_edges = [e for e in st.session_state.edges if (e['from'] == u_n and e['to'] == v_n) or (e['from'] == v_n and e['to'] == u_n)]
-                    best_edge = min(all_edges, key=lambda x: x['weight'])
-                    best_edge_ids.append(best_edge['id'])
-            except:
-                st.error("Không có đường nối!")
+st.subheader("🚩 Tìm đường và Tô màu")
+col1, col2, col3 = st.columns([2, 2, 1])
+s_node = col1.selectbox("Bắt đầu", sorted(list(st.session_state.nodes)) if st.session_state.nodes else ["-"])
+e_node = col2.selectbox("Đích", sorted(list(st.session_state.nodes)) if st.session_state.nodes else ["-"])
 
-# --- 3. VẼ ĐỒ THỊ ---
+if col3.button("TÔ MÀU ĐƯỜNG ĐI"):
+    if st.session_state.nodes and s_node != "-":
+        G = nx.MultiGraph()
+        for e in st.session_state.edges:
+            G.add_edge(e['from'], e['to'], weight=e['weight'], id=e['id'])
+        try:
+            path_nodes = nx.shortest_path(G, source=s_node, target=e_node, weight='weight')
+            for i in range(len(path_nodes)-1):
+                u_n, v_n = path_nodes[i], path_nodes[i+1]
+                all_e = [e for e in st.session_state.edges if (e['from']==u_n and e['to']==v_n) or (e['from']==v_n and e['to']==u_n)]
+                best_edge_ids.append(min(all_e, key=lambda x: x['weight'])['id'])
+            st.success(f"Đã tìm thấy đường đi!")
+        except:
+            st.error("Không có đường nối!")
+
+# --- 3. VẼ ĐỒ THỊ VỚI NHÚNG JAVASCRIPT GHI NHỚ ---
 net = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
+net.toggle_physics(False) # Tắt vật lý để không bị nhảy
 
-# Quan trọng: Tắt hoàn toàn physics để các điểm đứng im tại tọa độ ta cấp
-net.set_options("""
-{
-  "interaction": {
-    "zoomView": true,
-    "dragView": true,
-    "navigationButtons": true
-  },
-  "physics": { "enabled": false }
-}
-""")
-
-# Thêm điểm (Node) với tọa độ cố định
+# Thêm Nodes
 for node in st.session_state.nodes:
     on_path = node in path_nodes
     color = "#FF1E1E" if on_path else "#2196F3"
-    coords = st.session_state.node_coords[node]
-    
-    net.add_node(
-        node, 
-        label=node, 
-        color=color, 
-        size=25, 
-        x=coords['x'], # Tọa độ X cố định
-        y=coords['y'], # Tọa độ Y cố định
-        font={'color': color, 'weight': 'bold', 'background': 'white'}
-    )
+    net.add_node(node, label=node, color=color, size=25, font={'size': 18, 'strokeWidth': 5, 'strokeColor': 'white'})
 
-# Thêm đường nối (Edge)
+# Thêm Edges
 pair_tracker = {}
 for e in st.session_state.edges:
     pair = tuple(sorted((e['from'], e['to'])))
     pair_tracker[pair] = pair_tracker.get(pair, 0) + 1
-    
-    smooth = {"type": "curvedCW", "roundness": 0.0}
-    if pair_tracker[pair] > 1:
-        smooth["roundness"] = 0.25 * (pair_tracker[pair] - 1)
-
+    smooth = {"type": "curvedCW", "roundness": 0.2 * (pair_tracker[pair]-1) if pair_tracker[pair]>1 else 0}
     on_path = e['id'] in best_edge_ids
-    net.add_edge(
-        e['from'], e['to'], 
-        label=f" {str(e['weight'])} ",
-        color="#FF1E1E" if on_path else "#D3D3D3",
-        width=7 if on_path else 2,
-        smooth=smooth,
-        font={'background': 'white', 'size': 14}
-    )
+    
+    net.add_edge(e['from'], e['to'], label=str(e['weight']), 
+                 color="#FF1E1E" if on_path else "#D3D3D3", 
+                 width=7 if on_path else 2, smooth=smooth,
+                 font={'background': 'white', 'size': 14})
 
-# Nút Xóa
-if st.button("🗑️ Xóa sạch đồ thị"):
-    st.session_state.edges = []
-    st.session_state.nodes = set()
-    st.session_state.node_coords = {}
-    st.rerun()
+# Tạo HTML và nhúng Script "Ghi nhớ"
+raw_html = net.generate_html()
 
-# Lưu và hiển thị
-net.save_graph("graph_clean.html")
-components.html(open("graph_clean.html", 'r', encoding='utf-8').read(), height=650)
+custom_js = """
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        // 1. Phục hồi tọa độ từ localStorage
+        var savedCoords = JSON.parse(localStorage.getItem('nodePositions') || '{}');
+        Object.keys(savedCoords).forEach(function(nodeId) {
+            network.moveNode(nodeId, savedCoords[nodeId].x, savedCoords[nodeId].y);
+        });
+
+        // 2. Lắng nghe sự kiện kéo thả để lưu tọa độ
+        network.on("dragEnd", function(params) {
+            if (params.nodes.length > 0) {
+                var nodeId = params.nodes[0];
+                var pos = network.getPositions([nodeId])[nodeId];
+                var currentCoords = JSON.parse(localStorage.getItem('nodePositions') || '{}');
+                currentCoords[nodeId] = pos;
+                localStorage.setItem('nodePositions', JSON.stringify(currentCoords));
+            }
+        });
+        
+        // 3. Phục hồi mức Zoom
+        var savedView = JSON.parse(localStorage.getItem('graphView') || '{}');
+        if(savedView.scale) {
+            network.moveTo({position: savedView.position, scale: savedView.scale});
+        }
+        
+        network.on("zoom", function() {
+            localStorage.setItem('graphView', JSON.stringify({
+                position: network.getViewPosition(),
+                scale: network.getScale()
+            }));
+        });
+    }, 500); 
+});
+</script>
+"""
+
+final_html = raw_html.replace("</body>", custom_js + "</body>")
+components.html(final_html, height=650)
