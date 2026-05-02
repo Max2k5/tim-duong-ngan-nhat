@@ -3,7 +3,7 @@ import networkx as nx
 from pyvis.network import Network
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Toán Đồ Thị Trực Quan", layout="wide")
+st.set_page_config(page_title="Đường Đi Ngắn Nhất", layout="wide")
 
 st.markdown("""
     <style>
@@ -26,7 +26,7 @@ st.markdown("""
 if 'edges' not in st.session_state: st.session_state.edges = [] 
 if 'nodes' not in st.session_state: st.session_state.nodes = set()
 
-st.title("📍 Tìm đường đi ngắn nhất")
+st.title("📍 Tìm đường đi có tổng trọng số nhỏ nhất")
 
 with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
     col1, col2, col3 = st.columns([1, 1, 1])
