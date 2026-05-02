@@ -78,7 +78,7 @@ if col_util1.button("🗑️ XÓA ĐỒ THỊ", key="clear_btn"):
     components.html("<script>localStorage.clear(); window.parent.location.reload();</script>")
     st.rerun()
 
-net = Network(height="650px", width="100%", bgcolor="#ffffff", font_color="black")
+net = Network(height="550px", width="100%", bgcolor="#ffffff", font_color="black")
 net.set_options("""
 {
   "physics": {"enabled": false},
