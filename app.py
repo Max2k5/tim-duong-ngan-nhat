@@ -27,7 +27,7 @@ with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
     v = c2.text_input("Đến điểm", placeholder="B").upper().strip()
     w = c3.number_input("Khoảng cách", min_value=0.1, value=5.0)
     
-    if st.button("Xác nhận nối đường"):
+    if st.button("Thêm đường nối"):
         if u and v and u != v:
             edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
             st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id})
@@ -45,7 +45,7 @@ if st.session_state.nodes:
         start_n = col_s.selectbox("Điểm xuất phát", sorted(list(st.session_state.nodes)))
         end_n = col_e.selectbox("Điểm đích", sorted(list(st.session_state.nodes)))
         
-        if st.button("🚀 Chạy Dijkstra"):
+        if st.button("🚀 Tìm!!"):
             G = nx.MultiGraph()
             for e in st.session_state.edges:
                 G.add_edge(e['from'], e['to'], weight=e['weight'], id=e['id'])
