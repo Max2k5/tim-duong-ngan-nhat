@@ -29,7 +29,7 @@ if 'edges' not in st.session_state:
 if 'nodes' not in st.session_state:
     st.session_state.nodes = set()
 
-st.title("📍 Đồ Thị Cố Định (Không Vật Lý)")
+st.title("📍 Tìm đường đi có trọng số ngắn nhất")
 
 # --- 2. NHẬP LIỆU ---
 with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
@@ -38,7 +38,7 @@ with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
     v = col2.text_input("Đến điểm").upper().strip()
     w = col3.number_input("Khoảng cách", min_value=0.1, value=5.0)
     
-    if st.button("XÁC NHẬN NỐI ĐƯỜNG"):
+    if st.button("Thêm đường nối"):
         if u and v and u != v:
             edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
             st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id})
@@ -57,7 +57,7 @@ if st.session_state.nodes:
         start_node = c1.selectbox("Điểm đi", sorted(list(st.session_state.nodes)))
         end_node = c2.selectbox("Điểm đến", sorted(list(st.session_state.nodes)))
         
-        if st.button("🚀 TÌM ĐƯỜNG & TÔ MÀU"):
+        if st.button("🚀 TÌM!!"):
             G = nx.MultiGraph()
             for e in st.session_state.edges:
                 G.add_edge(e['from'], e['to'], weight=e['weight'], id=e['id'])
@@ -80,9 +80,6 @@ if st.session_state.nodes:
 
 # --- 4. VẼ ĐỒ THỊ ---
 st.write("---")
-if st.button("🎯 CĂN GIỮA HÌNH VẼ", key="fit_btn"):
-    components.html("<script>localStorage.removeItem('graphView'); window.parent.location.reload();</script>", height=0)
-
 net = Network(height="550px", width="100%", bgcolor="#ffffff", font_color="black")
 
 # KHÓA CHẶT PHYSICS Ở ĐÂY
