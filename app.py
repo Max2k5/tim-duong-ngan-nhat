@@ -50,7 +50,7 @@ if st.session_state.nodes:
         start_node = c1.selectbox("Điểm đi", sorted(list(st.session_state.nodes)))
         end_node = c2.selectbox("Điểm đến", sorted(list(st.session_state.nodes)))
         
-        if st.button("🚀 TÌM ĐƯỜNG"):
+        if st.button("🚀 TÌM!!"):
             G = nx.MultiGraph()
             for e in st.session_state.edges:
                 G.add_edge(e['from'], e['to'], weight=e['weight'], id=e['id'])
@@ -73,8 +73,6 @@ if st.session_state.nodes:
 
 st.write("---")
 col_util1, col_util2 = st.columns([1, 1])
-if col_util1.button("🎯 CĂN GIỮA HÌNH", key="fit_btn"):
-    components.html("<script>localStorage.removeItem('graphView'); window.parent.location.reload();</script>", height=0)
 if col_util2.button("🗑️ XÓA ĐỒ THỊ", key="clear_btn"):
     st.session_state.edges, st.session_state.nodes = [], set()
     components.html("<script>localStorage.clear(); window.parent.location.reload();</script>")
