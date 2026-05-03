@@ -40,10 +40,19 @@ with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
     
     if st.button("Thêm đường nối"):
         if u and v and u != v:
-            edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
-            st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id})
-            st.session_state.nodes.add(u)
-            st.session_state.nodes.add(v)
+            # KIỂM TRA VÀ CẬP NHẬT ĐỘ DÀI NẾU ĐÃ TỒN TẠI
+            existing_edge = next((e for e in st.session_state.edges if 
+                                 (e['from'] == u and e['to'] == v) or 
+                                 (e['from'] == v and e['to'] == u)), None)
+            
+            if existing_edge:
+                existing_edge['weight'] = w
+                st.toast(f"Đã cập nhật khoảng cách {u}-{v} thành {w}")
+            else:
+                edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
+                st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id})
+                st.session_state.nodes.add(u)
+                st.session_state.nodes.add(v)
             st.rerun()
 
 path_nodes, best_edge_ids, total_dist = [], [], 0
@@ -55,7 +64,7 @@ if st.session_state.nodes:
         end_node = c2.selectbox("Điểm đến", sorted(list(st.session_state.nodes)))
         
         if st.button("🚀 TÌM!!"):
-            # --- TỰ TRIỂN KHAI DIJKSTRA ĐỂ LẤY BƯỚC GIẢI ---
+            # --- LOGIC DIJKSTRA CHỈ RA CÁC BƯỚC ---
             adj = {node: [] for node in st.session_state.nodes}
             for e in st.session_state.edges:
                 adj[e['from']].append({'to': e['to'], 'w': e['weight'], 'id': e['id']})
@@ -67,12 +76,10 @@ if st.session_state.nodes:
             p_edge = {node: None for node in st.session_state.nodes}
             visited = set()
             steps_output = []
-
-            # Thuật toán bắt đầu
+            
             nodes_to_visit = list(st.session_state.nodes)
             
             while nodes_to_visit:
-                # Tìm đỉnh có dist nhỏ nhất
                 curr = None
                 for n in nodes_to_visit:
                     if curr is None or dist[n] < dist[curr]:
@@ -83,7 +90,7 @@ if st.session_state.nodes:
                 nodes_to_visit.remove(curr)
                 visited.add(curr)
                 
-                step_text = f"🔍 **Bước {len(visited)}**: Xét đỉnh **{curr}** (Khoảng cách hiện tại: {dist[curr]})"
+                step_text = f"🔍 **Bước {len(visited)}**: Xét đỉnh **{curr}** (Nhãn hiện tại: {dist[curr]})"
                 update_texts = []
 
                 for edge in adj[curr]:
@@ -92,7 +99,7 @@ if st.session_state.nodes:
                         new_d = dist[curr] + edge['w']
                         if new_d < dist[neighbor]:
                             old_d = "∞" if dist[neighbor] == float('inf') else dist[neighbor]
-                            update_texts.append(f"&nbsp;&nbsp;&nbsp;&nbsp;➡️ Cập nhật đỉnh **{neighbor}**: {old_d} -> **{new_d}** (qua {curr})")
+                            update_texts.append(f"&nbsp;&nbsp;&nbsp;&nbsp;➡️ Cập nhật đỉnh **{neighbor}**: {old_d} -> **{new_d}**")
                             dist[neighbor] = new_d
                             parent[neighbor] = curr
                             p_edge[neighbor] = edge['id']
@@ -100,7 +107,6 @@ if st.session_state.nodes:
                 steps_output.append({"title": step_text, "updates": update_texts})
                 if curr == end_node: break
 
-            # Truy vết kết quả
             if dist[end_node] != float('inf'):
                 temp = end_node
                 while temp:
@@ -110,7 +116,6 @@ if st.session_state.nodes:
                 path_nodes.reverse()
                 total_dist = dist[end_node]
 
-                # HIỂN THỊ KẾT QUẢ (Giữ nguyên style cũ)
                 st.markdown(f"""
                     <div class="result-box">
                         <p style="margin:0; font-size:1.1em;"><b>Lộ trình:</b> {' ➔ '.join(path_nodes)}</p>
@@ -118,16 +123,13 @@ if st.session_state.nodes:
                     </div>
                 """, unsafe_allow_html=True)
 
-                # HIỂN THỊ CÁC BƯỚC GIẢI THÍCH (Trực quan cho học sinh)
                 st.write("### 🧠 Các bước thực hiện thuật toán:")
                 for step in steps_output:
-                    with st.container():
-                        st.markdown(f'<div class="step-log">{step["title"]}</div>', unsafe_allow_html=True)
-                        if step["updates"]:
-                            for up in step["updates"]:
-                                st.markdown(up, unsafe_allow_html=True)
-                        else:
-                            st.markdown("&nbsp;&nbsp;&nbsp;&nbsp;*Không có đỉnh kề nào cần cập nhật.*")
+                    st.markdown(f'<div class="step-log">{step["title"]}</div>', unsafe_allow_html=True)
+                    if step["updates"]:
+                        for up in step["updates"]: st.markdown(up, unsafe_allow_html=True)
+                    else:
+                        st.markdown("&nbsp;&nbsp;&nbsp;&nbsp;*Không có cập nhật nhãn mới.*")
             else:
                 st.error("Không có đường nối giữa hai điểm này!")
 
@@ -163,17 +165,14 @@ for e in st.session_state.edges:
                  font={'background': 'white', 'size': 14})
 
 raw_html = net.generate_html()
-# Chèn JS cũ để giữ vị trí đỉnh
 custom_js = """
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         var savedPos = JSON.parse(localStorage.getItem('nodePositions') || '{}');
         Object.keys(savedPos).forEach(function(id) { network.moveNode(id, savedPos[id].x, savedPos[id].y); });
-        
         var savedView = JSON.parse(localStorage.getItem('graphView') || '{}');
         if(savedView.scale) network.moveTo({position: savedView.position, scale: savedView.scale});
-
         network.on("dragEnd", function(params) {
             if (params.nodes.length > 0) {
                 var id = params.nodes[0];
