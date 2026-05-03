@@ -19,6 +19,10 @@ st.markdown("""
         background-color: #f8f9fa; padding: 15px; border-radius: 12px;
         border: 1px solid #dee2e6; margin: 10px 0;
     }
+    .step-log {
+        background-color: #ffffff; padding: 10px; border-left: 4px solid #007bff;
+        margin-bottom: 10px; font-family: sans-serif; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+    }
     iframe { border: 1px solid #ddd !important; border-radius: 15px; }
     </style>
     """, unsafe_allow_html=True)
@@ -51,24 +55,80 @@ if st.session_state.nodes:
         end_node = c2.selectbox("Điểm đến", sorted(list(st.session_state.nodes)))
         
         if st.button("🚀 TÌM!!"):
-            G = nx.MultiGraph()
+            # --- TỰ TRIỂN KHAI DIJKSTRA ĐỂ LẤY BƯỚC GIẢI ---
+            adj = {node: [] for node in st.session_state.nodes}
             for e in st.session_state.edges:
-                G.add_edge(e['from'], e['to'], weight=e['weight'], id=e['id'])
-            try:
-                path_nodes = nx.shortest_path(G, source=start_node, target=end_node, weight='weight')
-                total_dist = nx.shortest_path_length(G, source=start_node, target=end_node, weight='weight')
-                for i in range(len(path_nodes)-1):
-                    u_n, v_n = path_nodes[i], path_nodes[i+1]
-                    all_e = [e for e in st.session_state.edges if (e['from']==u_n and e['to']==v_n) or (e['from']==v_n and e['to']==u_n)]
-                    best_edge_ids.append(min(all_e, key=lambda x: x['weight'])['id'])
+                adj[e['from']].append({'to': e['to'], 'w': e['weight'], 'id': e['id']})
+                adj[e['to']].append({'to': e['from'], 'w': e['weight'], 'id': e['id']})
+
+            dist = {node: float('inf') for node in st.session_state.nodes}
+            dist[start_node] = 0
+            parent = {node: None for node in st.session_state.nodes}
+            p_edge = {node: None for node in st.session_state.nodes}
+            visited = set()
+            steps_output = []
+
+            # Thuật toán bắt đầu
+            nodes_to_visit = list(st.session_state.nodes)
+            
+            while nodes_to_visit:
+                # Tìm đỉnh có dist nhỏ nhất
+                curr = None
+                for n in nodes_to_visit:
+                    if curr is None or dist[n] < dist[curr]:
+                        curr = n
                 
+                if dist[curr] == float('inf'): break
+                
+                nodes_to_visit.remove(curr)
+                visited.add(curr)
+                
+                step_text = f"🔍 **Bước {len(visited)}**: Xét đỉnh **{curr}** (Khoảng cách hiện tại: {dist[curr]})"
+                update_texts = []
+
+                for edge in adj[curr]:
+                    neighbor = edge['to']
+                    if neighbor not in visited:
+                        new_d = dist[curr] + edge['w']
+                        if new_d < dist[neighbor]:
+                            old_d = "∞" if dist[neighbor] == float('inf') else dist[neighbor]
+                            update_texts.append(f"&nbsp;&nbsp;&nbsp;&nbsp;➡️ Cập nhật đỉnh **{neighbor}**: {old_d} -> **{new_d}** (qua {curr})")
+                            dist[neighbor] = new_d
+                            parent[neighbor] = curr
+                            p_edge[neighbor] = edge['id']
+                
+                steps_output.append({"title": step_text, "updates": update_texts})
+                if curr == end_node: break
+
+            # Truy vết kết quả
+            if dist[end_node] != float('inf'):
+                temp = end_node
+                while temp:
+                    path_nodes.append(temp)
+                    if p_edge[temp]: best_edge_ids.append(p_edge[temp])
+                    temp = parent[temp]
+                path_nodes.reverse()
+                total_dist = dist[end_node]
+
+                # HIỂN THỊ KẾT QUẢ (Giữ nguyên style cũ)
                 st.markdown(f"""
                     <div class="result-box">
                         <p style="margin:0; font-size:1.1em;"><b>Lộ trình:</b> {' ➔ '.join(path_nodes)}</p>
                         <p style="margin:0; font-size:1.1em;"><b>Tổng độ dài:</b> <span style="color:red; font-weight:bold;">{total_dist}</span></p>
                     </div>
                 """, unsafe_allow_html=True)
-            except:
+
+                # HIỂN THỊ CÁC BƯỚC GIẢI THÍCH (Trực quan cho học sinh)
+                st.write("### 🧠 Các bước thực hiện thuật toán:")
+                for step in steps_output:
+                    with st.container():
+                        st.markdown(f'<div class="step-log">{step["title"]}</div>', unsafe_allow_html=True)
+                        if step["updates"]:
+                            for up in step["updates"]:
+                                st.markdown(up, unsafe_allow_html=True)
+                        else:
+                            st.markdown("&nbsp;&nbsp;&nbsp;&nbsp;*Không có đỉnh kề nào cần cập nhật.*")
+            else:
                 st.error("Không có đường nối giữa hai điểm này!")
 
 st.write("---")
@@ -103,6 +163,7 @@ for e in st.session_state.edges:
                  font={'background': 'white', 'size': 14})
 
 raw_html = net.generate_html()
+# Chèn JS cũ để giữ vị trí đỉnh
 custom_js = """
 <script>
 document.addEventListener('DOMContentLoaded', function() {
