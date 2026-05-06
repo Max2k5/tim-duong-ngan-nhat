@@ -108,6 +108,7 @@ if st.session_state.nodes:
             n = len(st.session_state.nodes)
             degrees = dict(G_simple.degree())
             
+            # Thuật toán quay lui tìm lộ trình Hamilton
             def find_hamilton():
                 nodes_list = list(st.session_state.nodes)
                 def backtrack(curr, path):
@@ -125,14 +126,36 @@ if st.session_state.nodes:
                 return None, None
 
             res_path, res_type = find_hamilton()
+            
             if res_path:
                 path_nodes = res_path
                 best_edge_ids = [G_simple[path_nodes[i]][path_nodes[i+1]]['id'] for i in range(len(path_nodes)-1)]
+                
                 if res_type == "circuit":
-                    st.markdown(f'<div class="theory-box"><b>Chu trình Hamilton:</b> {" ➔ ".join(path_nodes)}</div>', unsafe_allow_html=True)
+                    # Kiểm tra Dirac/Ore cho chu trình
+                    dirac = all(d >= n/2 for d in degrees.values()) if n >= 3 else False
+                    ore = True
+                    if n >= 3:
+                        for i, u_n in enumerate(sorted(list(st.session_state.nodes))):
+                            for v_n in sorted(list(st.session_state.nodes))[i+1:]:
+                                if not G_simple.has_edge(u_n, v_n) and degrees[u_n] + degrees[v_n] < n:
+                                    ore = False; break
+                    else: ore = False
+                    
+                    reason = "Đồ thị có chu trình Hamilton."
+                    if dirac: reason = f"Thỏa định lý Dirac: Vì $n={n} \geq 3$ và mọi đỉnh đều có bậc $\geq n/2 = {n/2}$."
+                    elif ore: reason = f"Thỏa định lý Ore: Vì $n={n} \geq 3$ và mọi cặp đỉnh không kề nhau đều có tổng bậc $\geq n = {n}$."
+                    
+                    st.markdown(f'<div class="theory-box"><b>Chu trình Hamilton:</b><br>{reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
                 else:
-                    st.markdown(f'<div class="theory-box"><b>Đường đi Hamilton:</b> {" ➔ ".join(path_nodes)}</div>', unsafe_allow_html=True)
-            else: st.warning("Không tìm thấy lộ trình Hamilton.")
+                    # Kiểm tra điều kiện cho đường đi
+                    path_cond = all(d >= (n-1)/2 for d in degrees.values()) if n >= 3 else False
+                    reason = "Đồ thị có đường đi Hamilton."
+                    if path_cond: reason = f"Vì đơn đồ thị có $n={n}$ đỉnh và mỗi đỉnh có bậc không nhỏ hơn $(n-1)/2 = {(n-1)/2}$ nên theo định lý, đồ thị có một đường đi Hamilton."
+                    
+                    st.markdown(f'<div class="theory-box"><b>Đường đi Hamilton:</b><br>{reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
+            else:
+                st.warning("❌ Không tìm thấy chu trình hay đường đi Hamilton.")
 
 # --- HIỂN THỊ ĐỒ THỊ ---
 st.write("---")
