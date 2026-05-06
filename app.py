@@ -167,7 +167,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
               f"vì mỗi đỉnh đều có bậc không nhỏ hơn {(n-1)/2}, "
               f"nên đồ thị chắc chắn có một đường đi Hamilton.")
                     else:
-                        reason = "Đồ thị tìm thấy đường đi Hamilton bằng thuật toán (không thỏa định lý đủ)."
+                        reason = "Đồ thị tìm thấy đường đi Hamilton bằng thuật toán (không thỏa định lý 4</b>)."
 
                 st.markdown(f'<div class="theory-box">{status}<br><b>Giải thích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
             else:
