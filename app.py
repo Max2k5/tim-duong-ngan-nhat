@@ -109,8 +109,10 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
             nodes_sorted = sorted(list(st.session_state.nodes))
             
             # 1. Kiểm tra các điều kiện định lý đủ
+            # Định lý Dirac (cho chu trình)
             dirac_ok = n >= 3 and all(d >= n/2 for d in degrees.values())
             
+            # Định lý Ore (cho chu trình)
             ore_ok = True
             if n >= 3:
                 for i, u_n in enumerate(nodes_sorted):
@@ -120,6 +122,9 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                                 ore_ok = False; break
                     if not ore_ok: break
             else: ore_ok = False
+
+            # Định lý 4 (cho đường đi) - Theo sách Kết nối tri thức
+            path_theorem_ok = n >= 3 and all(d >= (n-1)/2 for d in degrees.values())
 
             # 2. Thuật toán quay lui tìm lộ trình thực tế
             def find_hamilton():
@@ -139,7 +144,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
 
             res_path, res_type = find_hamilton()
             
-            # 3. Hiển thị thông tin bậc đỉnh (Sửa st.markdown để hiện đậm)
+            # 3. Hiển thị thông tin bậc đỉnh
             deg_info = ", ".join([f"<b>{node}</b> (bậc {d})" for node, d in degrees.items()])
             st.markdown(f"Số đỉnh $n = {n}$. Bậc các đỉnh: {deg_info}", unsafe_allow_html=True)
 
@@ -154,15 +159,20 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                     elif ore_ok:
                         reason = f"Thỏa <b>định lý Ore</b> (mọi cặp đỉnh không kề có tổng bậc $\geq n = {n}$)."
                     else:
-                        reason = "Đồ thị tìm thấy chu trình bằng thuật toán (không thỏa mãn Dirac/Ore). Điều này cho thấy Dirac/Ore chỉ là <b>điều kiện đủ</b>."
+                        reason = "Đồ thị có chu trình Hamilton (không thỏa định lý đủ Dirac/Ore)."
                 else:
                     status = "✅ Đồ thị có <b>đường đi Hamilton</b>."
-                    reason = "Tìm thấy lộ trình đi qua mọi đỉnh đúng một lần bằng thuật toán vét cạn."
+                    if path_theorem_ok:
+                        reason = (f"Thỏa mãn <b>Định lý 4</b>: Trong đơn đồ thị có {n} đỉnh, "
+              f"vì mỗi đỉnh đều có bậc không nhỏ hơn {(n-1)/2}, "
+              f"nên đồ thị chắc chắn có một đường đi Hamilton.")
+                    else:
+                        reason = "Đồ thị tìm thấy đường đi Hamilton bằng thuật toán (không thỏa định lý đủ)."
 
                 st.markdown(f'<div class="theory-box">{status}<br><b>Giải thích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
             else:
                 st.warning("❌ Không tìm thấy chu trình hay đường đi Hamilton.")
-                st.info(f"Lưu ý: Với $n={n}$, đồ thị không thỏa mãn các điều kiện đủ để chắc chắn có tính chất Hamilton.")
+                st.info(f"Lưu ý: Với $n={n}$, mọi đỉnh cần có bậc $\geq {(n-1)/2}$ để chắc chắn có đường đi Hamilton.")
 
 # --- HIỂN THỊ ĐỒ THỊ ---
 st.write("---")
