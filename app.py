@@ -166,6 +166,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                               "khẳng định sự tồn tại của chu trình, còn với đường đi, điều kiện tồn tại thường rộng hơn.")
 
                 st.markdown(f'<div class="theory-box">{status}<br><b>Phân tích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
+                else:
                 st.warning("❌ Không tìm thấy chu trình hay đường đi Hamilton.")
                 with st.info("Giải thích lý do không thỏa định lý đủ:"):
                     if n < 3:
