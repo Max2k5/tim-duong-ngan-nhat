@@ -108,21 +108,17 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
             degrees = dict(G_simple.degree())
             nodes_sorted = sorted(list(st.session_state.nodes))
             
-            # 1. Tính toán các điều kiện định lý trước
-            # Điều kiện Dirac
+            # 1. Kiểm tra các điều kiện định lý đủ
             dirac_ok = n >= 3 and all(d >= n/2 for d in degrees.values())
             
-            # Điều kiện Ore (cho chu trình)
             ore_ok = True
-            non_adj_ore = []
             if n >= 3:
                 for i, u_n in enumerate(nodes_sorted):
                     for v_n in nodes_sorted[i+1:]:
                         if not G_simple.has_edge(u_n, v_n):
-                            sum_deg = degrees[u_n] + degrees[v_n]
-                            if sum_deg < n:
-                                ore_ok = False
-                            non_adj_ore.append(f"deg({u_n})+deg({v_n})={sum_deg}")
+                            if degrees[u_n] + degrees[v_n] < n:
+                                ore_ok = False; break
+                    if not ore_ok: break
             else: ore_ok = False
 
             # 2. Thuật toán quay lui tìm lộ trình thực tế
@@ -143,7 +139,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
 
             res_path, res_type = find_hamilton()
             
-            # 3. Hiển thị giải thích
+            # 3. Hiển thị thông tin bậc đỉnh (Sửa st.markdown để hiện đậm)
             deg_info = ", ".join([f"<b>{node}</b> (bậc {d})" for node, d in degrees.items()])
             st.markdown(f"Số đỉnh $n = {n}$. Bậc các đỉnh: {deg_info}", unsafe_allow_html=True)
 
@@ -154,26 +150,19 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                 if res_type == "circuit":
                     status = "✅ Đồ thị có <b>chu trình Hamilton</b>."
                     if dirac_ok:
-                        reason = f"Thỏa <b>định lý Dirac</b>: $n \geq 3$ và mọi đỉnh có bậc $\geq n/2 = {n/2}$."
+                        reason = f"Thỏa <b>định lý Dirac</b> ($d(v) \geq n/2 = {n/2}$)."
                     elif ore_ok:
-                        reason = f"Thỏa <b>định lý Ore</b>: $n \geq 3$ và mọi cặp đỉnh không kề nhau có tổng bậc $\geq n = {n}$."
+                        reason = f"Thỏa <b>định lý Ore</b> (mọi cặp đỉnh không kề có tổng bậc $\geq n = {n}$)."
                     else:
-                        reason = "Đồ thị không thỏa các định lý đủ (Dirac/Ore) nhưng vẫn tìm thấy chu trình bằng thuật toán."
+                        reason = "Đồ thị tìm thấy chu trình bằng thuật toán (không thỏa mãn Dirac/Ore). Điều này cho thấy Dirac/Ore chỉ là <b>điều kiện đủ</b>."
                 else:
                     status = "✅ Đồ thị có <b>đường đi Hamilton</b>."
-                    reason = "Tìm thấy lộ trình đi qua mọi đỉnh đúng một lần."
+                    reason = "Tìm thấy lộ trình đi qua mọi đỉnh đúng một lần bằng thuật toán vét cạn."
 
                 st.markdown(f'<div class="theory-box">{status}<br><b>Giải thích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
             else:
                 st.warning("❌ Không tìm thấy chu trình hay đường đi Hamilton.")
-                with st.info("Giải thích lý do không thỏa định lý đủ:"):
-                    if n < 3:
-                        st.write("- Số đỉnh $n < 3$.")
-                    if not dirac_ok:
-                        min_deg_node = min(degrees, key=degrees.get)
-                        st.write(f"- Vi phạm Dirac: Đỉnh <b>{min_deg_node}</b> có bậc {degrees[min_deg_node]} < {n/2}")
-                    if not ore_ok and n >= 3:
-                        st.write(f"- Vi phạm Ore: Tồn tại cặp đỉnh không kề nhau có tổng bậc < {n}.")
+                st.info(f"Lưu ý: Với $n={n}$, đồ thị không thỏa mãn các điều kiện đủ để chắc chắn có tính chất Hamilton.")
 
 # --- HIỂN THỊ ĐỒ THỊ ---
 st.write("---")
