@@ -148,26 +148,31 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
             deg_info = ", ".join([f"<b>{node}</b> (bậc {d})" for node, d in degrees.items()])
             st.markdown(f"Số đỉnh $n = {n}$. Bậc các đỉnh: {deg_info}", unsafe_allow_html=True)
 
-            if res_path:
+           if res_path:
                 path_nodes = res_path
                 best_edge_ids = [G_simple[path_nodes[i]][path_nodes[i+1]]['id'] for i in range(len(path_nodes)-1)]
                 
                 if res_type == "circuit":
                     status = "✅ Đồ thị có <b>chu trình Hamilton</b>."
                     if dirac_ok:
-                        reason = f"Thỏa <b>định lý Dirac</b> ($d(v) \geq n/2 = {n/2}$)."
+                        reason = (f"Thỏa mãn <b>định lý Dirac</b>: Đơn đồ thị có {n} đỉnh ($n \geq 3$) "
+                                  f"và mọi đỉnh đều có bậc không nhỏ hơn {n/2} (nửa số đỉnh).")
                     elif ore_ok:
-                        reason = f"Thỏa <b>định lý Ore</b> (mọi cặp đỉnh không kề có tổng bậc $\geq n = {n}$)."
+                        reason = (f"Thỏa mãn <b>định lý Ore</b>: Đơn đồ thị có {n} đỉnh ($n \geq 3$) "
+                                  f"và mọi cặp đỉnh không kề nhau đều có tổng số bậc không nhỏ hơn {n}.")
                     else:
-                        reason = "Đồ thị có chu trình Hamilton (không thỏa định lý đủ Dirac/Ore)."
+                        reason = ("Đồ thị tồn tại chu trình Hamilton được tìm thấy bằng thuật toán. "
+                                  "Lưu ý: Đồ thị này không thỏa mãn các điều kiện đủ như định lý Dirac hay Ore.")
                 else:
                     status = "✅ Đồ thị có <b>đường đi Hamilton</b>."
                     if path_theorem_ok:
-                        reason = (f"Thỏa mãn <b>Định lý 4</b>: Trong đơn đồ thị có {n} đỉnh, "
-              f"vì mỗi đỉnh đều có bậc không nhỏ hơn {(n-1)/2}, "
-              f"nên đồ thị chắc chắn có một đường đi Hamilton.")
+                        reason = (f"Thỏa mãn <b>định lý 4</b>: Đơn đồ thị có {n} đỉnh ($n \geq 3$) "
+                                  f"và mỗi đỉnh đều có bậc không nhỏ hơn {(n-1)/2} (một nửa của số đỉnh trừ đi 1).")
                     else:
-                        reason = "Đồ thị tìm thấy đường đi Hamilton bằng thuật toán (không thỏa định lý 4</b>)."
+                        reason = ("Đồ thị tồn tại đường đi Hamilton được tìm thấy bằng thuật toán "
+                                  "(không thỏa mãn các điều kiện về bậc của định lý đủ).")
+
+                st.markdown(f'<div class="theory-box">{status}<br><b>Giải thích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
 
                 st.markdown(f'<div class="theory-box">{status}<br><b>Giải thích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
             else:
