@@ -154,17 +154,18 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                 if res_type == "circuit":
                     status = "✅ Đồ thị có <b>chu trình Hamilton</b>."
                     if dirac_ok:
-                        reason = f"Thỏa <b>định lý Dirac</b>: $n \geq 3$ và mọi đỉnh có bậc $\geq n/2 = {n/2}$."
+                        reason = f"Thỏa <b>định lý Dirac</b> ($d(v) \geq {n/2}$), nên đồ thị chắc chắn có chu trình Hamilton."
                     elif ore_ok:
-                        reason = f"Thỏa <b>định lý Ore</b>: $n \geq 3$ và mọi cặp đỉnh không kề nhau có tổng bậc $\geq n = {n}$."
+                        reason = f"Thỏa <b>định lý Ore</b> (tổng bậc cặp đỉnh không kề $\geq {n}$), nên đồ thị chắc chắn có chu trình Hamilton."
                     else:
-                        reason = "Đồ thị không thỏa các định lý đủ (Dirac/Ore) nhưng vẫn tìm thấy chu trình bằng thuật toán."
+                        reason = ("Mặc dù không thỏa mãn các định lý đủ (Dirac, Ore), đồ thị vẫn tồn tại chu trình Hamilton. "
+                                  "Điều này minh chứng rằng các định lý trên chỉ là <b>điều kiện đủ</b>, không phải điều kiện cần.")
                 else:
                     status = "✅ Đồ thị có <b>đường đi Hamilton</b>."
-                    reason = "Tìm thấy lộ trình đi qua mọi đỉnh đúng một lần."
+                    reason = ("Đồ thị tìm được đường đi qua mọi đỉnh. Lưu ý rằng các định lý Dirac/Ore thường dùng để "
+                              "khẳng định sự tồn tại của chu trình, còn với đường đi, điều kiện tồn tại thường rộng hơn.")
 
-                st.markdown(f'<div class="theory-box">{status}<br><b>Giải thích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
-            else:
+                st.markdown(f'<div class="theory-box">{status}<br><b>Phân tích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
                 st.warning("❌ Không tìm thấy chu trình hay đường đi Hamilton.")
                 with st.info("Giải thích lý do không thỏa định lý đủ:"):
                     if n < 3:
