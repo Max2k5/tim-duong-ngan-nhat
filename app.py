@@ -102,113 +102,78 @@ if st.session_state.nodes:
             else:
                 st.markdown(f'<div class="theory-box">Ta thấy các đỉnh: {deg_desc}. Vì đồ thị có <b>{len(odd_nodes)} đỉnh bậc lẻ</b> (không phải 0 hoặc 2) nên <b>không tồn tại</b> chu trình hay đường đi Euler.</div>', unsafe_allow_html=True)
 
-# --- HAMILTON (CỐ ĐỊNH LỖI PHIÊN BẢN TRƯỚC) ---
-
-    with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
-
+with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
         if st.button("🔍 KIỂM TRA HAMILTON"):
-
             n = len(st.session_state.nodes)
-
             degrees = dict(G_simple.degree())
-
+            nodes_sorted = sorted(list(st.session_state.nodes))
             
+            # 1. Tính toán các điều kiện định lý trước
+            # Điều kiện Dirac
+            dirac_ok = n >= 3 and all(d >= n/2 for d in degrees.values())
+            
+            # Điều kiện Ore (cho chu trình)
+            ore_ok = True
+            non_adj_ore = []
+            if n >= 3:
+                for i, u_n in enumerate(nodes_sorted):
+                    for v_n in nodes_sorted[i+1:]:
+                        if not G_simple.has_edge(u_n, v_n):
+                            sum_deg = degrees[u_n] + degrees[v_n]
+                            if sum_deg < n:
+                                ore_ok = False
+                            non_adj_ore.append(f"deg({u_n})+deg({v_n})={sum_deg}")
+            else: ore_ok = False
 
-            # Thuật toán quay lui tìm lộ trình Hamilton
-
+            # 2. Thuật toán quay lui tìm lộ trình thực tế
             def find_hamilton():
-
-                nodes_list = list(st.session_state.nodes)
-
                 def backtrack(curr, path):
-
                     if len(path) == n: return path
-
                     for neighbor in G_simple.neighbors(curr):
-
                         if neighbor not in path:
-
                             res = backtrack(neighbor, path + [neighbor])
-
                             if res: return res
-
                     return None
-
-                for start in nodes_list:
-
+                for start in nodes_sorted:
                     p = backtrack(start, [start])
-
                     if p:
-
                         if G_simple.has_edge(p[-1], p[0]): return p + [p[0]], "circuit"
-
                         return p, "path"
-
                 return None, None
 
-
-
             res_path, res_type = find_hamilton()
-
             
+            # 3. Hiển thị giải thích
+            deg_info = ", ".join([f"<b>{node}</b> (bậc {d})" for node, d in degrees.items()])
+            st.write(f"Số đỉnh $n = {n}$. Bậc các đỉnh: {deg_info}")
 
             if res_path:
-
                 path_nodes = res_path
-
                 best_edge_ids = [G_simple[path_nodes[i]][path_nodes[i+1]]['id'] for i in range(len(path_nodes)-1)]
-
                 
-
                 if res_type == "circuit":
-
-                    # Kiểm tra Dirac/Ore cho chu trình
-
-                    dirac = all(d >= n/2 for d in degrees.values()) if n >= 3 else False
-
-                    ore = True
-
-                    if n >= 3:
-
-                        for i, u_n in enumerate(sorted(list(st.session_state.nodes))):
-
-                            for v_n in sorted(list(st.session_state.nodes))[i+1:]:
-
-                                if not G_simple.has_edge(u_n, v_n) and degrees[u_n] + degrees[v_n] < n:
-
-                                    ore = False; break
-
-                    else: ore = False
-
-                    
-
-                    reason = "Đồ thị có chu trình Hamilton."
-
-                    if dirac: reason = f"Thỏa định lý Dirac: Vì $n={n} \geq 3$ và mọi đỉnh đều có bậc $\geq n/2 = {n/2}$."
-
-                    elif ore: reason = f"Thỏa định lý Ore: Vì $n={n} \geq 3$ và mọi cặp đỉnh không kề nhau đều có tổng bậc $\geq n = {n}$."
-
-                    
-
-                    st.markdown(f'<div class="theory-box"><b>Chu trình Hamilton:</b><br>{reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
-
+                    status = "✅ Đồ thị có <b>chu trình Hamilton</b>."
+                    if dirac_ok:
+                        reason = f"Thỏa <b>định lý Dirac</b>: $n \geq 3$ và mọi đỉnh có bậc $\geq n/2 = {n/2}$."
+                    elif ore_ok:
+                        reason = f"Thỏa <b>định lý Ore</b>: $n \geq 3$ và mọi cặp đỉnh không kề nhau có tổng bậc $\geq n = {n}$."
+                    else:
+                        reason = "Đồ thị không thỏa các định lý đủ (Dirac/Ore) nhưng vẫn tìm thấy chu trình bằng thuật toán."
                 else:
+                    status = "✅ Đồ thị có <b>đường đi Hamilton</b>."
+                    reason = "Tìm thấy lộ trình đi qua mọi đỉnh đúng một lần."
 
-                    # Kiểm tra điều kiện cho đường đi
-
-                    path_cond = all(d >= (n-1)/2 for d in degrees.values()) if n >= 3 else False
-
-                    reason = "Đồ thị có đường đi Hamilton."
-
-                    if path_cond: reason = f"Vì đơn đồ thị có $n={n}$ đỉnh và mỗi đỉnh có bậc không nhỏ hơn $(n-1)/2 = {(n-1)/2}$ nên theo định lý, đồ thị có một đường đi Hamilton."
-
-                    
-
-                    st.markdown(f'<div class="theory-box"><b>Đường đi Hamilton:</b><br>{reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
-
+                st.markdown(f'<div class="theory-box">{status}<br><b>Giải thích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
             else:
-
                 st.warning("❌ Không tìm thấy chu trình hay đường đi Hamilton.")
+                with st.info("Giải thích lý do không thỏa định lý đủ:"):
+                    if n < 3:
+                        st.write("- Số đỉnh $n < 3$.")
+                    if not dirac_ok:
+                        min_deg_node = min(degrees, key=degrees.get)
+                        st.write(f"- Vi phạm Dirac: Đỉnh <b>{min_deg_node}</b> có bậc {degrees[min_deg_node]} < {n/2}")
+                    if not ore_ok and n >= 3:
+                        st.write(f"- Vi phạm Ore: Tồn tại cặp đỉnh không kề nhau có tổng bậc < {n}.")
 
 # --- HIỂN THỊ ĐỒ THỊ ---
 st.write("---")
