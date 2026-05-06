@@ -145,7 +145,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
             
             # 3. Hiển thị giải thích
             deg_info = ", ".join([f"<b>{node}</b> (bậc {d})" for node, d in degrees.items()])
-            st.write(f"Số đỉnh $n = {n}$. Bậc các đỉnh: {deg_info}")
+            st.markdown(f"Số đỉnh $n = {n}$. Bậc các đỉnh: {deg_info}", unsafe_allow_html=True)
 
             if res_path:
                 path_nodes = res_path
