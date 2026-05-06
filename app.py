@@ -59,9 +59,6 @@ with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
                 st.success(f"✅ Đã thêm đường nối {u} - {v} thành công!")
             st.rerun()
 
-# 3. Nút ẩn độ dài trên đồ thị
-show_labels = st.sidebar.checkbox("Hiển thị trọng số trên hình", value=True)
-
 G_simple = nx.Graph()
 G_simple.add_nodes_from(st.session_state.nodes)
 for e in st.session_state.edges:
@@ -139,10 +136,14 @@ if st.session_state.nodes:
 
 # --- HIỂN THỊ ĐỒ THỊ ---
 st.write("---")
-if st.button("🗑️ XÓA ĐỒ THỊ", key="clear_btn"):
-    st.session_state.edges, st.session_state.nodes = [], set()
-    components.html("<script>localStorage.clear(); window.parent.location.reload();</script>")
-    st.rerun()
+c1, c2 = st.columns([3, 1]) # Chia tỷ lệ 3:1 để nút xóa nằm gọn bên phải
+with c1:
+    show_labels = st.checkbox("Hiển thị trọng số trên hình", value=True)
+with c2:
+    if st.button("🗑️ XÓA ĐỒ THỊ", key="clear_btn"):
+        st.session_state.edges, st.session_state.nodes = [], set()
+        components.html("<script>localStorage.clear(); window.parent.location.reload();</script>")
+        st.rerun()
 
 net = Network(height="550px", width="100%", bgcolor="#ffffff", font_color="black")
 net.set_options('{"physics": {"enabled": false}, "interaction": {"navigationButtons": true}}')
