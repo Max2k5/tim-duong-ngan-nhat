@@ -102,13 +102,12 @@ if st.session_state.nodes:
             else:
                 st.markdown(f'<div class="theory-box">Ta thấy các đỉnh: {deg_desc}. Vì đồ thị có <b>{len(odd_nodes)} đỉnh bậc lẻ</b> (không phải 0 hoặc 2) nên <b>không tồn tại</b> chu trình hay đường đi Euler.</div>', unsafe_allow_html=True)
 
-    # --- HAMILTON (CỐ ĐỊNH LỖI PHIÊN BẢN TRƯỚC) ---
+# --- PHẦN HAMILTON ĐÃ SỬA LỖI HIỂN THỊ ---
     with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
         if st.button("🔍 KIỂM TRA HAMILTON"):
             n = len(st.session_state.nodes)
             degrees = dict(G_simple.degree())
             
-            # Thuật toán quay lui tìm lộ trình Hamilton
             def find_hamilton():
                 nodes_list = list(st.session_state.nodes)
                 def backtrack(curr, path):
@@ -128,11 +127,11 @@ if st.session_state.nodes:
             res_path, res_type = find_hamilton()
             
             if res_path:
-                path_nodes = res_path
-                best_edge_ids = [G_simple[path_nodes[i]][path_nodes[i+1]]['id'] for i in range(len(path_nodes)-1)]
+                # QUAN TRỌNG: Gán lại vào session_state để Streamlit không làm mất dữ liệu khi render lại đồ thị
+                st.session_state.path_nodes = res_path
+                st.session_state.best_edge_ids = [G_simple[res_path[i]][res_path[i+1]]['id'] for i in range(len(res_path)-1)]
                 
                 if res_type == "circuit":
-                    # Kiểm tra Dirac/Ore cho chu trình
                     dirac = all(d >= n/2 for d in degrees.values()) if n >= 3 else False
                     ore = True
                     if n >= 3:
@@ -145,17 +144,26 @@ if st.session_state.nodes:
                     reason = "Đồ thị có chu trình Hamilton."
                     if dirac: reason = f"Thỏa định lý Dirac: Vì $n={n} \geq 3$ và mọi đỉnh đều có bậc $\geq n/2 = {n/2}$."
                     elif ore: reason = f"Thỏa định lý Ore: Vì $n={n} \geq 3$ và mọi cặp đỉnh không kề nhau đều có tổng bậc $\geq n = {n}$."
-                    
-                    st.markdown(f'<div class="theory-box"><b>Chu trình Hamilton:</b><br>{reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
+                    st.success("Đã tìm thấy chu trình Hamilton!") # Thông báo nhanh
+                    st.markdown(f'<div class="theory-box"><b>Chu trình Hamilton:</b><br>{reason}<br>Lộ trình: <b>{" ➔ ".join(res_path)}</b></div>', unsafe_allow_html=True)
                 else:
-                    # Kiểm tra điều kiện cho đường đi
-                    path_cond = all(d >= (n-1)/2 for d in degrees.values()) if n >= 3 else False
-                    reason = "Đồ thị có đường đi Hamilton."
-                    if path_cond: reason = f"Vì đơn đồ thị có $n={n}$ đỉnh và mỗi đỉnh có bậc không nhỏ hơn $(n-1)/2 = {(n-1)/2}$ nên theo định lý, đồ thị có một đường đi Hamilton."
-                    
-                    st.markdown(f'<div class="theory-box"><b>Đường đi Hamilton:</b><br>{reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
+                    st.success("Đã tìm thấy đường đi Hamilton!")
+                    st.markdown(f'<div class="theory-box"><b>Đường đi Hamilton:</b><br>Đồ thị không thỏa mãn định lý Dirac/Ore cho chu trình, nhưng tìm thấy một đường đi Hamilton qua tất cả các đỉnh: <br><b>{" ➔ ".join(res_path)}</b></div>', unsafe_allow_html=True)
+                
+                # Cưỡng bức chạy lại để cập nhật màu sắc cho đồ thị bên dưới
+                st.rerun()
             else:
-                st.warning("❌ Không tìm thấy chu trình hay đường đi Hamilton.")
+                # Giải thích khi không có (như đã hứa ở bước trước)
+                deg_info = ", ".join([f"đỉnh <b>{node}</b> bậc <b>{d}</b>" for node, d in sorted(degrees.items())])
+                st.markdown(f"""
+                <div class="theory-box">
+                    <b>Kết luận: Không tìm thấy lộ trình Hamilton.</b><br>
+                    - Xét số đỉnh $n = {n}$.<br>
+                    - Bậc của các đỉnh hiện tại: {deg_info}.<br>
+                    - Kiểm tra định lý Dirac: Cần mọi đỉnh có bậc $\geq n/2 = {n/2}$. Ta thấy có đỉnh không thỏa mãn.<br>
+                    - Qua kiểm tra vét cạn, không tồn tại đường đi nào đi qua mỗi đỉnh đúng một lần.
+                </div>
+                """, unsafe_allow_html=True)
 
 # --- HIỂN THỊ ĐỒ THỊ ---
 st.write("---")
