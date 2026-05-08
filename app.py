@@ -99,7 +99,7 @@ if st.session_state.nodes:
                 st.markdown(f'''
                 <div class="theory-box">
                     ✅ <b>Đồ thị có chu trình Euler.</b><br>
-                    <b>Giải thích:</b> Ta thấy các đỉnh: {deg_desc} đều là số chẵn và đồ thị liên thông.<br>
+                    <b>Giải thích:</b> Ta thấy các đỉnh: {deg_desc} đều là số chẵn và đồ thị liên thông nên có chu trình Euler.<br>
                     <b>Chu trình:</b> <b>{" ➔ ".join(path_nodes)}</b>
                 </div>
                 ''', unsafe_allow_html=True)
@@ -111,7 +111,7 @@ if st.session_state.nodes:
                 st.markdown(f'''
                 <div class="theory-box">
                     ✅ <b>Đồ thị chỉ có đường đi Euler.</b><br>
-                    <b>Giải thích:</b> Ta thấy các đỉnh: {deg_desc} và có đúng hai đỉnh <b>{u_s}</b> và <b>{v_e}</b> có bậc lẻ. Ngoài ra đồ thị liên thông nên có đường đi từ {u_s} đến {v_e}.<br>
+                    <b>Giải thích:</b> Ta thấy các đỉnh: {deg_desc} và có đúng hai đỉnh <b>{u_s}</b> và <b>{v_e}</b> có bậc lẻ. Ngoài ra đồ thị liên thông nên có đường đi Euler từ {u_s} đến {v_e}.<br>
                     <b>Đường đi:</b> <b>{" ➔ ".join(path_nodes)}</b>
                 </div>
                 ''', unsafe_allow_html=True)
