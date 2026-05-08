@@ -50,7 +50,7 @@ with st.expander("➕ QUẢN LÝ ĐƯỜNG NỐI", expanded=True):
     st.write("---") # Đường kẻ phân cách cho thoáng
     
     # ĐƯA NÚT BẤM RA NGOÀI KHỐI IF/ELSE TRÊN
-    btn_col1, btn_col2 = st.columns(2)
+    btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
         if st.button("Thêm đường nối", use_container_width=True):
@@ -58,7 +58,7 @@ with st.expander("➕ QUẢN LÝ ĐƯỜNG NỐI", expanded=True):
                 existing_edge = next((e for e in st.session_state.edges if (e['from'] == u and e['to'] == v) or (e['from'] == v and e['to'] == u)), None)
                 if existing_edge:
                     existing_edge['weight'] = w
-                    st.success(f"✅ Đã cập nhật {u}-{v} thành {w}")
+                    st.success(f"✅ Cập nhật {u}-{v}")
                 else:
                     edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
                     st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id, 'is_weighted': (w_type == "Có giá trị")})
@@ -72,10 +72,26 @@ with st.expander("➕ QUẢN LÝ ĐƯỜNG NỐI", expanded=True):
                 initial_count = len(st.session_state.edges)
                 st.session_state.edges = [e for e in st.session_state.edges if not ((e['from'] == u and e['to'] == v) or (e['from'] == v and e['to'] == u))]
                 if len(st.session_state.edges) < initial_count:
-                    st.success(f"🗑️ Đã xóa đường nối {u} - {v}")
+                    st.success(f"🗑️ Đã xóa nối {u}-{v}")
                     st.rerun()
                 else:
-                    st.error(f"❌ Không tìm thấy đường nối {u} - {v}")
+                    st.error("❌ Không tìm thấy nối")
+
+    with btn_col3:
+        if st.button("Xóa điểm", use_container_width=True):
+            # Ưu tiên xóa điểm ở ô "Từ điểm" (u) nếu có, không thì xóa v
+            target_node = u if u else (v if v else None)
+            
+            if target_node and target_node in st.session_state.nodes:
+                # 1. Xóa điểm khỏi tập hợp nodes
+                st.session_state.nodes.remove(target_node)
+                # 2. Xóa tất cả các đường nối liên quan đến điểm đó
+                st.session_state.edges = [e for e in st.session_state.edges if e['from'] != target_node and e['to'] != target_node]
+                
+                st.success(f"🗑️ Đã xóa điểm {target_node} và các nối liên quan!")
+                st.rerun()
+            else:
+                st.error("❌ Điểm không tồn tại")
 
 G_simple = nx.Graph()
 G_simple.add_nodes_from(st.session_state.nodes)
