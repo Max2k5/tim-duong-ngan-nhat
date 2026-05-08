@@ -159,31 +159,31 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
             res_path, res_type = find_hamilton()
 
             # 3. Tổng hợp giải thích
-            deg_details = ", ".join([f"đỉnh **{node}** (bậc {d})" for node, d in degrees.items()])
+            deg_details = ", ".join([f"đỉnh {node} (bậc {d})" for node, d in degrees.items()])
             
             if res_path:
                 path_nodes = res_path
                 best_edge_ids = [G_simple[path_nodes[i]][path_nodes[i+1]]['id'] for i in range(len(path_nodes)-1)]
                 
                 if res_type == "circuit":
-                    status = "✅ Đồ thị có **chu trình Hamilton**."
+                    status = "✅ Đồ thị có chu trình Hamilton."
                     if dirac_ok:
-                        reason = (f"Thỏa mãn **định lý Dirac**: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
+                        reason = (f"Thỏa mãn định lý Dirac: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
                                   f"đều có bậc $\geq n/2 = {min_deg_required}$.")
                     elif ore_ok:
-                        reason = (f"Thỏa mãn **định lý Ore**: Đồ thị có $n={n}$ đỉnh, và mọi cặp đỉnh không kề nhau "
+                        reason = (f"Thỏa mãn định lý Ore: Đồ thị có $n={n}$ đỉnh, và mọi cặp đỉnh không kề nhau "
                                   f"đều có tổng số bậc $\geq n$.")
                     else:
-                        reason = (f"Đồ thị tồn tại chu trình Hamilton được tìm thấy bằng phương pháp **vét cạn**. "
+                        reason = (f"Đồ thị tồn tại chu trình Hamilton được tìm thấy bằng phương pháp vét cạn. "
                                   f"Lưu ý: Đồ thị này không thỏa mãn các điều kiện đủ (Dirac/Ore), "
                                   f"nhưng vì các định lý này chỉ mang tính một chiều nên đồ thị vẫn có thể có chu trình.")
                 else:
-                    status = "✅ Đồ thị có **đường đi Hamilton** (không có chu trình)."
+                    status = "✅ Đồ thị có đường đi Hamilton (không có chu trình)."
                     if path_theorem_ok:
-                        reason = (f"Thỏa mãn **định lý về đường đi**: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
+                        reason = (f"Thỏa mãn định lý về đường đi: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
                                   f"đều có bậc $\geq (n-1)/2 = {path_min_deg_required}$.")
                     else:
-                        reason = (f"Đồ thị tồn tại đường đi Hamilton được tìm thấy bằng phương pháp **vét cạn**. "
+                        reason = (f"Đồ thị tồn tại đường đi Hamilton được tìm thấy bằng phương pháp vét cạn. "
                                   f"Lưu ý: Các điều kiện đủ về bậc đỉnh không được thỏa mãn, nhưng lộ trình vẫn tồn tại.")
 
                 st.markdown(f'''
