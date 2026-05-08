@@ -77,7 +77,7 @@ with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
                         st.rerun()
                     else:
                         st.error(f"❌ Không tìm thấy đường nối {u} - {v}")
-            st.rerun()
+        st.rerun()
 
 G_simple = nx.Graph()
 G_simple.add_nodes_from(st.session_state.nodes)
