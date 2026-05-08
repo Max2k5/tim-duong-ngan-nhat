@@ -33,32 +33,12 @@ path_nodes, best_edge_ids = [], []
 
 st.title("📍 LÝ THUYẾT ĐỒ THỊ")
 
-        # --- 2. THÔNG BÁO & QUẢN LÝ ĐƯỜNG NỐI ---
-        # Tạo 2 cột để nút nằm ngang hàng
-        btn_col1, btn_col2 = st.columns(2)
-        with btn_col1:
-            if st.button("Thêm đường nối", use_container_width=True):
-                if u and v and u != v:
-                    existing_edge = next((e for e in st.session_state.edges if (e['from'] == u and e['to'] == v) or (e['from'] == v and e['to'] == u)), None)
-                    if existing_edge:
-                        existing_edge['weight'] = w
-                        st.success(f"✅ Cập nhật {u}-{v}")
-                    else:
-                        edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
-                        st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id, 'is_weighted': (w_type == "Có giá trị")})
-                        st.success(f"✅ Đã thêm {u}-{v}")
-                    st.rerun()
+    # --- 2. THÔNG BÁO & QUẢN LÝ ĐƯỜNG NỐI ---
+with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
+    col1, col2, col3 = st.columns([1, 1, 1])
+    u = col1.text_input("Từ điểm").upper().strip()
+    v = col2.text_input("Đến điểm").upper().strip()
 
-        with btn_col2:
-            if st.button("Xóa đường nối", key="del_edge_btn", use_container_width=True):
-                if u and v:
-                    initial_count = len(st.session_state.edges)
-                    st.session_state.edges = [e for e in st.session_state.edges if not ((e['from'] == u and e['to'] == v) or (e['from'] == v and e['to'] == u))]
-                    if len(st.session_state.edges) < initial_count:
-                        st.success(f"🗑️ Đã xóa {u}-{v}")
-                        st.rerun()
-                    else:
-                        st.error("❌ Không có đường nối này")
     # 3. Lựa chọn khoảng cách "Không có" (Đồ thị không trọng số)
     w_type = st.radio("Loại trọng số", ["Có giá trị", "Không có"], horizontal=True)
     if w_type == "Có giá trị":
