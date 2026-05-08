@@ -119,13 +119,20 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
             
             # Định lý Ore
             ore_ok = True
-            non_adjacent_pairs_failed = []
+            pairs_list = [] # Lưu danh sách các cặp (A, C)
+            sums_list = []  # Lưu danh sách tổng bậc 3+3=6
+            
             for i, u_n in enumerate(nodes_sorted):
                 for v_n in nodes_sorted[i+1:]:
                     if not G_simple.has_edge(u_n, v_n):
-                        if degrees[u_n] + degrees[v_n] < n:
+                        sum_deg = degrees[u_n] + degrees[v_n]
+                        pairs_list.append(f"({u_n}, {v_n})")
+                        sums_list.append(f"{degrees[u_n]}+{degrees[v_n]}={sum_deg}")
+                        if sum_deg < n:
                             ore_ok = False
-                            non_adjacent_pairs_failed.append((u_n, v_n))
+            # Nếu đồ thị đầy đủ (không có cặp nào không kề nhau) thì Ore vẫn thỏa mãn
+            if not pairs_list and n >= 3:
+                ore_ok = True
             
             # Định lý đường đi Hamilton (d >= (n-1)/2)
             path_min_deg_required = (n - 1) / 2
@@ -171,8 +178,13 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                         reason = (f"Thỏa mãn định lý Dirac: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
                                   f"đều có bậc ≥ n/2 = {min_deg_required}.")
                     elif ore_ok:
-                        reason = (f"Thỏa mãn định lý Ore: Đồ thị có n = {n} đỉnh, và mọi cặp đỉnh không kề nhau "
-                                  f"đều có tổng số bậc ≥ n.")
+                        pairs_str = ", ".join(pairs_list) if pairs_list else "Không có (đồ thị đầy đủ)"
+                        sums_str = ", ".join(sums_list) if sums_list else "N/A"
+                        
+                        reason = (f"Thỏa mãn <b>định lý Ore</b>: Đồ thị có n = {n} đỉnh.<br>"
+                                  f"Các cặp đỉnh không kề nhau lần lượt là: {pairs_str}.<br>"
+                                  f"Tổng bậc của chúng lần lượt là: {sums_str} và đều ≥ {n}.<br>"
+                                  f"Vì vậy đồ thị thỏa mãn định lý Ore nên có chu trình Hamilton.")
                     else:
                         reason = (f"Đồ thị tồn tại chu trình Hamilton được tìm thấy bằng phương pháp vét cạn. "
                                   f"Lưu ý: Đồ thị này không thỏa mãn các điều kiện đủ (Dirac/Ore), "
