@@ -77,8 +77,7 @@ if st.session_state.nodes:
                 best_edge_ids = [G_simple[path_nodes[i]][path_nodes[i+1]]['id'] for i in range(len(path_nodes)-1)]
                 st.markdown(f'<div class="result-box"><b>Lộ trình:</b> {" ➔ ".join(path_nodes)}<br><b>Tổng độ dài:</b> <span style="color:red;">{total_dist}</span></div>', unsafe_allow_html=True)
             except: st.error("Không có đường nối!")
-
-    # --- 1. PHÂN TÍCH EULER (KHÔI PHỤC GIẢI THÍCH) ---
+    
     with st.expander("📐 PHÂN TÍCH EULER", expanded=False):
         if st.button("🔍 KIỂM TRA EULER"):
             degrees = dict(G_simple.degree())
@@ -87,20 +86,42 @@ if st.session_state.nodes:
             deg_desc = ", ".join([f"đỉnh <b>{n}</b> bậc <b>{d}</b>" for n, d in sorted(degrees.items())])
             
             if not is_connected:
-                st.warning("❌ Đồ thị không liên thông, không thể có chu trình/đường đi Euler.")
+                st.markdown(f'''
+                <div class="theory-box">
+                    ❌ <b>Đồ thị không có chu trình hay đường đi Euler.</b><br>
+                    <b>Giải thích:</b> Đồ thị không liên thông nên không thỏa mãn điều kiện cần để tồn tại lộ trình Euler.
+                </div>
+                ''', unsafe_allow_html=True)
             elif len(odd_nodes) == 0:
                 circuit = list(nx.eulerian_circuit(G_simple))
                 path_nodes = [u for u, v in circuit] + [circuit[-1][1]]
                 best_edge_ids = [G_simple[u][v]['id'] for u, v in circuit]
-                st.markdown(f'<div class="theory-box">Ta thấy các đỉnh: {deg_desc} đều là số chẵn và đồ thị liên thông nên đồ thị này có <b>chu trình Euler</b>: <br><b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
+                st.markdown(f'''
+                <div class="theory-box">
+                    ✅ <b>Đồ thị có chu trình Euler.</b><br>
+                    <b>Giải thích:</b> Ta thấy các đỉnh: {deg_desc} đều là số chẵn và đồ thị liên thông.<br>
+                    <b>Chu trình:</b> <b>{" ➔ ".join(path_nodes)}</b>
+                </div>
+                ''', unsafe_allow_html=True)
             elif len(odd_nodes) == 2:
                 u_s, v_e = odd_nodes[0], odd_nodes[1]
                 path_gen = list(nx.eulerian_path(G_simple, source=u_s))
                 path_nodes = [u for u, v in path_gen] + [path_gen[-1][1]]
                 best_edge_ids = [G_simple[u][v]['id'] for u, v in path_gen]
-                st.markdown(f'<div class="theory-box">Ta thấy các đỉnh: {deg_desc} có đúng hai đỉnh <b>{u_s}</b> và <b>{v_e}</b> có bậc lẻ. Ngoài ra đồ thị liên thông nên có <b>đường đi Euler</b> từ {u_s} đến {v_e}: <br><b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
+                st.markdown(f'''
+                <div class="theory-box">
+                    ✅ <b>Đồ thị chỉ có đường đi Euler.</b><br>
+                    <b>Giải thích:</b> Ta thấy các đỉnh: {deg_desc} và có đúng hai đỉnh <b>{u_s}</b> và <b>{v_e}</b> có bậc lẻ. Ngoài ra đồ thị liên thông nên có đường đi từ {u_s} đến {v_e}.<br>
+                    <b>Đường đi:</b> <b>{" ➔ ".join(path_nodes)}</b>
+                </div>
+                ''', unsafe_allow_html=True)
             else:
-                st.markdown(f'<div class="theory-box">Ta thấy các đỉnh: {deg_desc}. Vì đồ thị có <b>{len(odd_nodes)} đỉnh bậc lẻ</b> (không phải 0 hoặc 2) nên <b>không tồn tại</b> chu trình hay đường đi Euler.</div>', unsafe_allow_html=True)
+                st.markdown(f'''
+                <div class="theory-box">
+                    ❌ <b>Đồ thị không có chu trình hay đường đi Euler.</b><br>
+                    <b>Giải thích:</b> Ta thấy các đỉnh: {deg_desc}. Vì đồ thị có <b>{len(odd_nodes)} đỉnh bậc lẻ</b> (không phải 0 hoặc 2) nên không tồn tại chu trình hay đường đi Euler.
+                </div>
+                ''', unsafe_allow_html=True)
 
 # --- PHẦN CODE HAMILTON ĐÃ SỬA ĐỔI ---
 with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
@@ -175,7 +196,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                 if res_type == "circuit":
                     status = "✅ Đồ thị có chu trình Hamilton."
                     if dirac_ok:
-                        reason = (f"Thỏa mãn định lý Dirac: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
+                        reason = (f"Thỏa mãn định lý Dirac: Đồ thị có <b>n = {n} đỉnh, các {deg_details} "
                                   f"đều có bậc không nhỏ hơn n/2 = {min_deg_required}.")
                     elif ore_ok:
                         pairs_str = ", ".join(pairs_list) if pairs_list else "Không có (đồ thị đầy đủ)"
@@ -190,7 +211,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                                   f"Lưu ý: Đồ thị này không thỏa mãn các điều kiện đủ (Dirac/Ore), "
                                   f"nhưng vì các định lý này chỉ mang tính một chiều nên một số đồ thị vẫn có thể có chu trình.")
                 else:
-                    status = "✅ Đồ thị có đường đi Hamilton (không có chu trình)."
+                    status = "✅ Đồ thị có đường đi Hamilton (không có chu trình Hamilton)."
                     if path_theorem_ok:
                         reason = (f"Thỏa mãn định lý về đường đi: Đồ thị có <b>n = {n} đỉnh, các {deg_details} "
                                   f"đều có bậc không nhỏ hơn (n-1)/2 = {path_min_deg_required}.")
