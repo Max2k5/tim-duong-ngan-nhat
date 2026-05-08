@@ -34,34 +34,11 @@ path_nodes, best_edge_ids = [], []
 st.title("📍 LÝ THUYẾT ĐỒ THỊ")
 
 # --- 2. THÔNG BÁO & QUẢN LÝ ĐƯỜNG NỐI ---
-    btn_col1, btn_col2 = st.columns(2)
-    with btn_col1:
-        if st.button("Thêm đường nối"):
-            if u and v and u != v:
-                existing_edge = next((e for e in st.session_state.edges if (e['from'] == u and e['to'] == v) or (e['from'] == v and e['to'] == u)), None)
-                if existing_edge:
-                    existing_edge['weight'] = w
-                    st.success(f"✅ Cập nhật {u} - {v} thành {w if w_type == 'Có giá trị' else 'mặc định'}")
-                else:
-                    edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
-                    st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id, 'is_weighted': (w_type == "Có giá trị")})
-                    st.session_state.nodes.add(u); st.session_state.nodes.add(v)
-                    st.success(f"✅ Đã thêm {u} - {v}!")
-                st.rerun()
+    with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
+    col1, col2, col3 = st.columns([1, 1, 1])
+    u = col1.text_input("Từ điểm").upper().strip()
+    v = col2.text_input("Đến điểm").upper().strip()
 
-    with btn_col2:
-        if st.button("Xóa đường nối", key="del_edge_btn"):
-            if u and v:
-                # Lọc bỏ đường nối giữa u và v
-                initial_count = len(st.session_state.edges)
-                st.session_state.edges = [e for e in st.session_state.edges if not ((e['from'] == u and e['to'] == v) or (e['from'] == v and e['to'] == u))]
-                
-                if len(st.session_state.edges) < initial_count:
-                    st.success(f"🗑️ Đã xóa đường nối {u} - {v}")
-                    st.rerun()
-                else:
-                    st.error(f"❌ Không tìm thấy đường nối {u} - {v}")
-    
     # 3. Lựa chọn khoảng cách "Không có" (Đồ thị không trọng số)
     w_type = st.radio("Loại trọng số", ["Có giá trị", "Không có"], horizontal=True)
     if w_type == "Có giá trị":
