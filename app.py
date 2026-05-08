@@ -36,7 +36,7 @@ st.title("📍 LÝ THUYẾT ĐỒ THỊ")
     # --- 2. THÔNG BÁO & QUẢN LÝ ĐƯỜNG NỐI ---
 with st.expander("➕ QUẢN LÝ ĐƯỜNG NỐI", expanded=True):
     col1, col2, col3 = st.columns([1, 1, 1])
-    u = col1.text_input("Từ điểm", key="u_input").upper().strip()
+    u = col1.text_input("Từ điểm/điểm cần xóa", key="u_input").upper().strip()
     v = col2.text_input("Đến điểm", key="v_input").upper().strip()
     
     # Lựa chọn loại trọng số
