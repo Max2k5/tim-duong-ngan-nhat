@@ -176,14 +176,14 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                     status = "✅ Đồ thị có chu trình Hamilton."
                     if dirac_ok:
                         reason = (f"Thỏa mãn định lý Dirac: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
-                                  f"đều có bậc ≥ n/2 = {min_deg_required}.")
+                                  f"đều có bậc không nhỏ hơn n/2 = {min_deg_required}.")
                     elif ore_ok:
                         pairs_str = ", ".join(pairs_list) if pairs_list else "Không có (đồ thị đầy đủ)"
                         sums_str = ", ".join(sums_list) if sums_list else "N/A"
                         
                         reason = (f"Thỏa mãn <b>định lý Ore</b>: Đồ thị có n = {n} đỉnh.<br>"
                                   f"Các cặp đỉnh không kề nhau lần lượt là: {pairs_str}.<br>"
-                                  f"Tổng bậc của chúng lần lượt là: {sums_str} và đều ≥ {n}.<br>"
+                                  f"Tổng bậc của chúng lần lượt là: {sums_str} và đều không nhỏ hơn {n}.<br>"
                                   f"Vì vậy đồ thị thỏa mãn định lý Ore nên có chu trình Hamilton.")
                     else:
                         reason = (f"Đồ thị tồn tại chu trình Hamilton được tìm thấy bằng phương pháp vét cạn. "
@@ -193,7 +193,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                     status = "✅ Đồ thị có đường đi Hamilton (không có chu trình)."
                     if path_theorem_ok:
                         reason = (f"Thỏa mãn định lý về đường đi: Đồ thị có <b>n = {n} đỉnh, các {deg_details} "
-                                  f"đều có bậc ≥ (n-1)/2 = {path_min_deg_required}.")
+                                  f"đều có bậc không nhỏ hơn (n-1)/2 = {path_min_deg_required}.")
                     else:
                         reason = (f"Đồ thị tồn tại đường đi Hamilton được tìm thấy bằng phương pháp vét cạn. "
                                   f"Lưu ý: Các điều kiện đủ về bậc đỉnh không được thỏa mãn, nhưng đường đi vẫn tồn tại.")
