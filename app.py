@@ -169,10 +169,10 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                     status = "✅ Đồ thị có chu trình Hamilton."
                     if dirac_ok:
                         reason = (f"Thỏa mãn định lý Dirac: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
-                                  f"đều có bậc $\geq n/2 = {min_deg_required}$.")
+                                  f"đều có bậc ≥ n/2 = {min_deg_required}.")
                     elif ore_ok:
-                        reason = (f"Thỏa mãn định lý Ore: Đồ thị có $n={n}$ đỉnh, và mọi cặp đỉnh không kề nhau "
-                                  f"đều có tổng số bậc $\geq n$.")
+                        reason = (f"Thỏa mãn định lý Ore: Đồ thị có n = {n} đỉnh, và mọi cặp đỉnh không kề nhau "
+                                  f"đều có tổng số bậc ≥ n.")
                     else:
                         reason = (f"Đồ thị tồn tại chu trình Hamilton được tìm thấy bằng phương pháp vét cạn. "
                                   f"Lưu ý: Đồ thị này không thỏa mãn các điều kiện đủ (Dirac/Ore), "
@@ -181,7 +181,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                     status = "✅ Đồ thị có đường đi Hamilton (không có chu trình)."
                     if path_theorem_ok:
                         reason = (f"Thỏa mãn định lý về đường đi: Đồ thị có <b>n = {n} đỉnh, các {deg_details} "
-                                  f"đều có bậc $\geq (n-1)/2 = {path_min_deg_required}$.")
+                                  f"đều có bậc ≥ (n-1)/2 = {path_min_deg_required}.")
                     else:
                         reason = (f"Đồ thị tồn tại đường đi Hamilton được tìm thấy bằng phương pháp vét cạn. "
                                   f"Lưu ý: Các điều kiện đủ về bậc đỉnh không được thỏa mãn, nhưng đường đi vẫn tồn tại.")
