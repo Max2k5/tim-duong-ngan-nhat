@@ -34,7 +34,7 @@ path_nodes, best_edge_ids = [], []
 st.title("📍 LÝ THUYẾT ĐỒ THỊ")
 
 # --- 2. THÔNG BÁO & QUẢN LÝ ĐƯỜNG NỐI ---
-    with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
+with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
     col1, col2, col3 = st.columns([1, 1, 1])
     u = col1.text_input("Từ điểm").upper().strip()
     v = col2.text_input("Đến điểm").upper().strip()
