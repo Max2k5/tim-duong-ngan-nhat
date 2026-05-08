@@ -189,7 +189,7 @@ with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
                 st.markdown(f'''
                 <div class="theory-box">
                     {status}<br>
-                    <b>Phân tích bậc:</b> Số đỉnh <b>n = {n}<b>; {deg_details}.<br>
+                    <b>Phân tích bậc:</b> Số đỉnh <b>n = {n}</b>; {deg_details}.<br>
                     <b>Giải thích:</b> {reason}<br>
                     <b>Lộ trình:</b> {" ➔ ".join(path_nodes)}
                 </div>
