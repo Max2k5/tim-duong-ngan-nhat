@@ -102,83 +102,103 @@ if st.session_state.nodes:
             else:
                 st.markdown(f'<div class="theory-box">Ta thấy các đỉnh: {deg_desc}. Vì đồ thị có <b>{len(odd_nodes)} đỉnh bậc lẻ</b> (không phải 0 hoặc 2) nên <b>không tồn tại</b> chu trình hay đường đi Euler.</div>', unsafe_allow_html=True)
 
+# --- PHẦN CODE HAMILTON ĐÃ SỬA ĐỔI ---
 with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
-        if st.button("🔍 KIỂM TRA HAMILTON"):
-            n = len(st.session_state.nodes)
+    if st.button("🔍 KIỂM TRA HAMILTON"):
+        n = len(st.session_state.nodes)
+        if n < 3:
+            st.warning("⚠️ Đồ thị cần ít nhất 3 đỉnh để xét các định lý Hamilton.")
+        else:
             degrees = dict(G_simple.degree())
             nodes_sorted = sorted(list(st.session_state.nodes))
             
-            # 1. Kiểm tra các điều kiện định lý đủ
-            # Định lý Dirac (cho chu trình)
-            dirac_ok = n >= 3 and all(d >= n/2 for d in degrees.values())
+            # 1. Kiểm tra các định lý (Điều kiện đủ)
+            # Hệ quả Ore (Định lý Dirac)
+            min_deg_required = n / 2
+            dirac_ok = all(d >= min_deg_required for d in degrees.values())
             
-            # Định lý Ore (cho chu trình)
+            # Định lý Ore
             ore_ok = True
-            if n >= 3:
-                for i, u_n in enumerate(nodes_sorted):
-                    for v_n in nodes_sorted[i+1:]:
-                        if not G_simple.has_edge(u_n, v_n):
-                            if degrees[u_n] + degrees[v_n] < n:
-                                ore_ok = False; break
-                    if not ore_ok: break
-            else: ore_ok = False
+            non_adjacent_pairs_failed = []
+            for i, u_n in enumerate(nodes_sorted):
+                for v_n in nodes_sorted[i+1:]:
+                    if not G_simple.has_edge(u_n, v_n):
+                        if degrees[u_n] + degrees[v_n] < n:
+                            ore_ok = False
+                            non_adjacent_pairs_failed.append((u_n, v_n))
+            
+            # Định lý đường đi Hamilton (d >= (n-1)/2)
+            path_min_deg_required = (n - 1) / 2
+            path_theorem_ok = all(d >= path_min_deg_required for d in degrees.values())
 
-            # Định lý 4 (cho đường đi) - Theo sách Kết nối tri thức
-            path_theorem_ok = n >= 3 and all(d >= (n-1)/2 for d in degrees.values())
-
-            # 2. Thuật toán quay lui tìm lộ trình thực tế
+            # 2. Thuật toán vét cạn (Backtracking) tìm lộ trình thực tế
             def find_hamilton():
                 def backtrack(curr, path):
-                    if len(path) == n: return path
+                    if len(path) == n:
+                        return path
                     for neighbor in G_simple.neighbors(curr):
                         if neighbor not in path:
                             res = backtrack(neighbor, path + [neighbor])
                             if res: return res
                     return None
+                
+                # Ưu tiên tìm chu trình trước
                 for start in nodes_sorted:
                     p = backtrack(start, [start])
                     if p:
-                        if G_simple.has_edge(p[-1], p[0]): return p + [p[0]], "circuit"
+                        if G_simple.has_edge(p[-1], p[0]):
+                            return p + [p[0]], "circuit"
+                
+                # Nếu không có chu trình, tìm đường đi
+                for start in nodes_sorted:
+                    p = backtrack(start, [start])
+                    if p:
                         return p, "path"
                 return None, None
 
             res_path, res_type = find_hamilton()
-            
-            # 3. Hiển thị thông tin bậc đỉnh
-            deg_info = ", ".join([f"<b>{node}</b> (bậc {d})" for node, d in degrees.items()])
-            st.markdown(f"Số đỉnh $n = {n}$. Bậc các đỉnh: {deg_info}", unsafe_allow_html=True)
 
-           if res_path:
+            # 3. Tổng hợp giải thích
+            deg_details = ", ".join([f"đỉnh **{node}** (bậc {d})" for node, d in degrees.items()])
+            
+            if res_path:
                 path_nodes = res_path
                 best_edge_ids = [G_simple[path_nodes[i]][path_nodes[i+1]]['id'] for i in range(len(path_nodes)-1)]
                 
                 if res_type == "circuit":
-                    status = "✅ Đồ thị có <b>chu trình Hamilton</b>."
+                    status = "✅ Đồ thị có **chu trình Hamilton**."
                     if dirac_ok:
-                        reason = (f"Thỏa mãn <b>định lý Dirac</b>: Đơn đồ thị có {n} đỉnh ($n \geq 3$) "
-                                  f"và mọi đỉnh đều có bậc không nhỏ hơn {n/2} (nửa số đỉnh).")
+                        reason = (f"Thỏa mãn **định lý Dirac**: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
+                                  f"đều có bậc $\geq n/2 = {min_deg_required}$.")
                     elif ore_ok:
-                        reason = (f"Thỏa mãn <b>định lý Ore</b>: Đơn đồ thị có {n} đỉnh ($n \geq 3$) "
-                                  f"và mọi cặp đỉnh không kề nhau đều có tổng số bậc không nhỏ hơn {n}.")
+                        reason = (f"Thỏa mãn **định lý Ore**: Đồ thị có $n={n}$ đỉnh, và mọi cặp đỉnh không kề nhau "
+                                  f"đều có tổng số bậc $\geq n$.")
                     else:
-                        reason = ("Đồ thị tồn tại chu trình Hamilton được tìm thấy bằng thuật toán. "
-                                  "Lưu ý: Đồ thị này không thỏa mãn các điều kiện đủ như định lý Dirac hay Ore.")
+                        reason = (f"Đồ thị tồn tại chu trình Hamilton được tìm thấy bằng phương pháp **vét cạn**. "
+                                  f"Lưu ý: Đồ thị này không thỏa mãn các điều kiện đủ (Dirac/Ore), "
+                                  f"nhưng vì các định lý này chỉ mang tính một chiều nên đồ thị vẫn có thể có chu trình.")
                 else:
-                    status = "✅ Đồ thị có <b>đường đi Hamilton</b>."
+                    status = "✅ Đồ thị có **đường đi Hamilton** (không có chu trình)."
                     if path_theorem_ok:
-                        reason = (f"Thỏa mãn <b>định lý 4</b>: Đơn đồ thị có {n} đỉnh ($n \geq 3$) "
-                                  f"và mỗi đỉnh đều có bậc không nhỏ hơn {(n-1)/2} (một nửa của số đỉnh trừ đi 1).")
+                        reason = (f"Thỏa mãn **định lý về đường đi**: Đồ thị có $n={n}$ đỉnh, các {deg_details} "
+                                  f"đều có bậc $\geq (n-1)/2 = {path_min_deg_required}$.")
                     else:
-                        reason = ("Đồ thị tồn tại đường đi Hamilton được tìm thấy bằng thuật toán "
-                                  "(không thỏa mãn các điều kiện về bậc của định lý đủ).")
+                        reason = (f"Đồ thị tồn tại đường đi Hamilton được tìm thấy bằng phương pháp **vét cạn**. "
+                                  f"Lưu ý: Các điều kiện đủ về bậc đỉnh không được thỏa mãn, nhưng lộ trình vẫn tồn tại.")
 
-                st.markdown(f'<div class="theory-box">{status}<br><b>Giải thích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
-
-                st.markdown(f'<div class="theory-box">{status}<br><b>Giải thích:</b> {reason}<br>Lộ trình: <b>{" ➔ ".join(path_nodes)}</b></div>', unsafe_allow_html=True)
+                st.markdown(f'''
+                <div class="theory-box">
+                    {status}<br>
+                    <b>Phân tích bậc:</b> Số đỉnh $n={n}$. {deg_details}.<br>
+                    <b>Giải thích:</b> {reason}<br>
+                    <b>Lộ trình:</b> {" ➔ ".join(path_nodes)}
+                </div>
+                ''', unsafe_allow_html=True)
             else:
                 st.warning("❌ Không tìm thấy chu trình hay đường đi Hamilton.")
-                st.info(f"Lưu ý: Với $n={n}$, mọi đỉnh cần có bậc $\geq {(n-1)/2}$ để chắc chắn có đường đi Hamilton.")
-
+                st.info(f"Dựa trên kiểm tra vét cạn, không tồn tại lộ trình đi qua mỗi đỉnh đúng một lần. "
+                        f"Bậc các đỉnh hiện tại: {deg_details}. Để chắc chắn có đường đi, "
+                        f"mọi đỉnh cần có bậc tối thiểu là {path_min_deg_required}.")
 # --- HIỂN THỊ ĐỒ THỊ ---
 st.write("---")
 c1, c2 = st.columns([3, 1]) # Chia tỷ lệ 3:1 để nút xóa nằm gọn bên phải
