@@ -3,7 +3,7 @@ import networkx as nx
 from pyvis.network import Network
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Playground graph", layout="wide")
+st.set_page_config(page_title="Graph Playground", layout="wide")
 
 st.markdown("""
     <style>
@@ -31,8 +31,9 @@ if 'nodes' not in st.session_state: st.session_state.nodes = set()
 
 path_nodes, best_edge_ids = [], []
 
-st.title("📍 LÝ THUYẾT ĐỒ THỊ")
-
+st.title("📍 CHÀO MỪNG ĐẾN VỚI WEBSITE VỀ LÝ THUYẾT ĐỒ THỊ(version 1)")
+st.markdown("---")
+st.info("💡 Hướng dẫn sử dụng cơ bản: Nhập tên các điểm (A, B, C...) để tạo ra các cạnh của đồ thị. Website sẽ tự động vẽ đồ thị và phân tích các tính chất toán học như đường đi ngắn nhất, Euler và Hamilton ở các mục bên dưới. Bây giờ hãy cùng nhau bắt đầu thôi!!")
     # --- 2. THÔNG BÁO & QUẢN LÝ ĐƯỜNG NỐI ---
 with st.expander("➕ QUẢN LÝ ĐƯỜNG NỐI", expanded=True):
     col1, col2, col3 = st.columns([1, 1, 1])
