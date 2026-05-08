@@ -3,7 +3,7 @@ import networkx as nx
 from pyvis.network import Network
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Đường Đi Ngắn Nhất", layout="wide")
+st.set_page_config(page_title="Playground graph", layout="wide")
 
 st.markdown("""
     <style>
@@ -31,7 +31,7 @@ if 'nodes' not in st.session_state: st.session_state.nodes = set()
 
 path_nodes, best_edge_ids = [], []
 
-st.title("📍 Tìm đường đi có tổng trọng số nhỏ nhất")
+st.title("📍 LÝ THUYẾT ĐỒ THỊ")
 
 # --- 2. THÔNG BÁO & QUẢN LÝ ĐƯỜNG NỐI ---
 with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
@@ -77,7 +77,8 @@ if st.session_state.nodes:
                 best_edge_ids = [G_simple[path_nodes[i]][path_nodes[i+1]]['id'] for i in range(len(path_nodes)-1)]
                 st.markdown(f'<div class="result-box"><b>Lộ trình:</b> {" ➔ ".join(path_nodes)}<br><b>Tổng độ dài:</b> <span style="color:red;">{total_dist}</span></div>', unsafe_allow_html=True)
             except: st.error("Không có đường nối!")
-    
+
+    # --- CODE EULER ---
     with st.expander("📐 PHÂN TÍCH EULER", expanded=False):
         if st.button("🔍 KIỂM TRA EULER"):
             degrees = dict(G_simple.degree())
@@ -123,7 +124,7 @@ if st.session_state.nodes:
                 </div>
                 ''', unsafe_allow_html=True)
 
-# --- PHẦN CODE HAMILTON ĐÃ SỬA ĐỔI ---
+# --- CODE HAMILTON ---
 with st.expander("💎 PHÂN TÍCH HAMILTON", expanded=False):
     if st.button("🔍 KIỂM TRA HAMILTON"):
         n = len(st.session_state.nodes)
@@ -256,7 +257,7 @@ for e in st.session_state.edges:
     tracker[pair] = tracker.get(pair, 0) + 1
     is_p = e['id'] in best_edge_ids
     
-    # 3. Xử lý hiển thị nhãn trọng số
+    # Xử lý hiển thị nhãn trọng số
     edge_label = ""
     if show_labels:
         edge_label = str(e['weight']) if e.get('is_weighted', True) else ""
