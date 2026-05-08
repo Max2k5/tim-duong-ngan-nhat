@@ -33,7 +33,7 @@ path_nodes, best_edge_ids = [], []
 
 st.title("📍 CHÀO MỪNG ĐẾN VỚI WEBSITE VỀ LÝ THUYẾT ĐỒ THỊ(version 1)")
 st.markdown("---")
-st.info("Đây là phiên bản ra mắt đầu tiên nên không tránh khỏi những thiếu sót ngoài ý muốn. Chúng tôi rất mong nhận được ý kiến đóng góp của bạn qua biểu mẫu dưới đây để không ngừng hoàn thiện trải nghiệm."
+st.info("Đây là phiên bản ra mắt đầu tiên nên không tránh khỏi những thiếu sót ngoài ý muốn. Chúng tôi rất mong nhận được ý kiến đóng góp của bạn qua biểu mẫu dưới đây để không ngừng hoàn thiện trải nghiệm.")
 st.link_button("Biểu mẫu góp ý", "https://forms.gle/tdZpNHsAxoqpgt5b8")
 st.info("💡 Hướng dẫn sử dụng cơ bản: Nhập tên các điểm (A, B, C...) và trọng số (nếu có) để tạo ra các cạnh của đồ thị. Website sẽ tự động vẽ đồ thị và phân tích các tính chất toán học như đường đi có tổng trọng số nhỏ nhất; chu trình và đường đi Euler, Hamilton ở các mục bên dưới.")
     # --- 2. THÔNG BÁO & QUẢN LÝ ĐƯỜNG NỐI ---
