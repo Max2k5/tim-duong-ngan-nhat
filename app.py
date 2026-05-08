@@ -45,7 +45,7 @@ with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
         w = col3.number_input("Khoảng cách", min_value=0.1, value=5.0)
     else:
         # --- THAY THẾ TỪ DÒNG 47 ĐẾN 59 ---
-    btn_col1, btn_col2 = st.columns(2)
+        btn_col1, btn_col2 = st.columns(2)
     
     with btn_col1:
         if st.button("Thêm đường nối", use_container_width=True):
