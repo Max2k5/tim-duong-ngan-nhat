@@ -44,19 +44,40 @@ with st.expander("➕ THÊM ĐƯỜNG NỐI", expanded=True):
     if w_type == "Có giá trị":
         w = col3.number_input("Khoảng cách", min_value=0.1, value=5.0)
     else:
-        w = 1.0 # Mặc định là 1 nếu không có trọng số
+        # --- THAY THẾ TỪ DÒNG 47 ĐẾN 59 ---
+    btn_col1, btn_col2 = st.columns(2)
+    
+    with btn_col1:
+        if st.button("Thêm đường nối", use_container_width=True):
+            if u and v and u != v:
+                existing_edge = next((e for e in st.session_state.edges if (e['from'] == u and e['to'] == v) or (e['from'] == v and e['to'] == u)), None)
+                if existing_edge:
+                    existing_edge['weight'] = w
+                    st.success(f"✅ Đã cập nhật độ dài {u} - {v} thành {w if w_type == 'Có giá trị' else 'mặc định'}")
+                else:
+                    edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
+                    st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id, 'is_weighted': (w_type == "Có giá trị")})
+                    st.session_state.nodes.add(u); st.session_state.nodes.add(v)
+                    st.success(f"✅ Đã thêm đường nối {u} - {v} thành công!")
+                st.rerun()
 
-    if st.button("Thêm đường nối"):
-        if u and v and u != v:
-            existing_edge = next((e for e in st.session_state.edges if (e['from'] == u and e['to'] == v) or (e['from'] == v and e['to'] == u)), None)
-            if existing_edge:
-                existing_edge['weight'] = w
-                st.success(f"✅ Đã cập nhật độ dài {u} - {v} thành {w if w_type == 'Có giá trị' else 'mặc định'}")
-            else:
-                edge_id = f"{u}-{v}-{len(st.session_state.edges)}"
-                st.session_state.edges.append({'from': u, 'to': v, 'weight': w, 'id': edge_id, 'is_weighted': (w_type == "Có giá trị")})
-                st.session_state.nodes.add(u); st.session_state.nodes.add(v)
-                st.success(f"✅ Đã thêm đường nối {u} - {v} thành công!")
+    with btn_col2:
+        if st.button("Xóa đường nối", use_container_width=True):
+            if u and v:
+                # Lưu số lượng đường nối trước khi xóa để kiểm tra kết quả
+                initial_count = len(st.session_state.edges)
+                
+                # Lọc bỏ đường nối giữa u và v (xét cả hai chiều vì đây là đồ thị vô hướng)
+                st.session_state.edges = [
+                    e for e in st.session_state.edges 
+                    if not ((e['from'] == u and e['to'] == v) or (e['from'] == v and e['to'] == u))
+                ]
+                
+                if len(st.session_state.edges) < initial_count:
+                    st.success(f"🗑️ Đã xóa đường nối {u} - {v}")
+                    st.rerun()
+                else:
+                    st.error(f"❌ Không tìm thấy đường nối {u} - {v}")
             st.rerun()
 
 G_simple = nx.Graph()
