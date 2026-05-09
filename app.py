@@ -159,9 +159,8 @@ if st.session_state.nodes:
                     unvisited.remove(curr)
                     step_idx += 1
                     
-                    if curr == end_node: break # Đã tới đích
+                    if curr == end_node: break 
 
-                # Hiển thị các bước vào theory-box
                 all_steps_text = "<br><br>".join(steps_html)
                 st.markdown(f'''
                 <div class="theory-box">
