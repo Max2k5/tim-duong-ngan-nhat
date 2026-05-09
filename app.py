@@ -136,10 +136,10 @@ if st.session_state.nodes:
                     # Chọn đỉnh có khoảng cách nhỏ nhất trong tập chưa thăm
                     curr = min(unvisited, key=lambda node: distances[node])
                     
-                    if distances[curr] == float('inf'): break # Hết đường nối
+                    if distances[curr] == float('inf'): break 
                     
-                    # Ghi nhận diễn biến bước này
-                    log = f"<b>Bước {step_idx}:</b> Xét đỉnh <b>{curr}</b> (Khoảng cách hiện tại: {distances[curr]}). "
+                    # DÒNG QUAN TRỌNG: Ghi nhận nhãn vĩnh viễn tại bước này
+                    log = f"<b>Bước {step_idx}:</b> Chọn đỉnh <b>{curr}</b>. Xác định <b>nhãn vĩnh viễn</b> cho {curr} là: <span style='color:green;'><b>{distances[curr]}</b></span>."
                     
                     updates = []
                     for neighbor in G_simple.neighbors(curr):
@@ -148,18 +148,18 @@ if st.session_state.nodes:
                             new_dist = distances[curr] + weight
                             if new_dist < distances[neighbor]:
                                 distances[neighbor] = new_dist
-                                updates.append(f"Cập nhật {neighbor} = {new_dist}")
+                                updates.append(f"cập nhật nhãn tạm thời {neighbor} = {new_dist}")
                     
                     if updates:
-                        log += "Thực hiện: " + ", ".join(updates) + "."
+                        log += "<br>&nbsp;&nbsp;&nbsp;➔ <i>Duyệt các đỉnh kề: " + ", ".join(updates) + ".</i>"
                     else:
-                        log += "Không có đỉnh kề nào có đường đi ngắn hơn."
+                        log += "<br>&nbsp;&nbsp;&nbsp;➔ <i>Không có nhãn tạm thời nào được cập nhật thêm.</i>"
                     
                     steps_html.append(log)
                     unvisited.remove(curr)
                     step_idx += 1
                     
-                    if curr == end_node: break 
+                    if curr == end_node: break
 
                 all_steps_text = "<br><br>".join(steps_html)
                 st.markdown(f'''
