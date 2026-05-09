@@ -103,18 +103,77 @@ for e in st.session_state.edges:
     G_simple.add_edge(e['from'], e['to'], weight=e['weight'], id=e['id'])
 
 if st.session_state.nodes:
-    # --- DIJKSTRA ---
+    # --- DIJKSTRA (PHIÊN BẢN MÔ PHỎNG CHI TIẾT TỪNG BƯỚC) ---
     with st.expander("🚩 TÌM ĐƯỜNG NGẮN NHẤT", expanded=False):
         c1, c2 = st.columns(2)
         start_node = c1.selectbox("Điểm đi", sorted(list(st.session_state.nodes)))
         end_node = c2.selectbox("Điểm đến", sorted(list(st.session_state.nodes)))
+        
         if st.button("🚀 TÌM!!"):
             try:
+                # 1. Tính toán kết quả cuối cùng trước
                 path_nodes = nx.shortest_path(G_simple, source=start_node, target=end_node, weight='weight')
                 total_dist = nx.shortest_path_length(G_simple, source=start_node, target=end_node, weight='weight')
                 best_edge_ids = [G_simple[path_nodes[i]][path_nodes[i+1]]['id'] for i in range(len(path_nodes)-1)]
-                st.markdown(f'<div class="result-box"><b>Lộ trình:</b> {" ➔ ".join(path_nodes)}<br><b>Tổng độ dài:</b> <span style="color:red;">{total_dist}</span></div>', unsafe_allow_html=True)
-            except: st.error("Không có đường nối!")
+                
+                # 2. Hiển thị kết quả lộ trình
+                st.markdown(f'''
+                <div class="result-box">
+                    1. Đường đi ngắn nhất từ <b>{start_node}</b> đến <b>{end_node}</b> có lộ trình là: 
+                    <span style="color:#007bff;"><b>{" ➔ ".join(path_nodes)}</b></span><br>
+                    2. Tổng độ dài đường đi là: <span style="color:red;"><b>{total_dist}</b></span>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                # 3. Thuật toán mô phỏng từng bước để lấy dữ liệu thực tế
+                steps_html = []
+                unvisited = set(G_simple.nodes())
+                distances = {node: float('inf') for node in G_simple.nodes()}
+                distances[start_node] = 0
+                step_idx = 1
+                
+                while unvisited:
+                    # Chọn đỉnh có khoảng cách nhỏ nhất trong tập chưa thăm
+                    curr = min(unvisited, key=lambda node: distances[node])
+                    
+                    if distances[curr] == float('inf'): break # Hết đường nối
+                    
+                    # Ghi nhận diễn biến bước này
+                    log = f"<b>Bước {step_idx}:</b> Xét đỉnh <b>{curr}</b> (Khoảng cách hiện tại: {distances[curr]}). "
+                    
+                    updates = []
+                    for neighbor in G_simple.neighbors(curr):
+                        if neighbor in unvisited:
+                            weight = G_simple[curr][neighbor].get('weight', 1.0)
+                            new_dist = distances[curr] + weight
+                            if new_dist < distances[neighbor]:
+                                distances[neighbor] = new_dist
+                                updates.append(f"Cập nhật {neighbor} = {new_dist}")
+                    
+                    if updates:
+                        log += "Thực hiện: " + ", ".join(updates) + "."
+                    else:
+                        log += "Không có đỉnh kề nào có đường đi ngắn hơn."
+                    
+                    steps_html.append(log)
+                    unvisited.remove(curr)
+                    step_idx += 1
+                    
+                    if curr == end_node: break # Đã tới đích
+
+                # Hiển thị các bước vào theory-box
+                all_steps_text = "<br><br>".join(steps_html)
+                st.markdown(f'''
+                <div class="theory-box">
+                    <b>3. CÁC BƯỚC THỰC HIỆN CỦA THUẬT TOÁN TRÊN ĐỒ THỊ NÀY:</b><br><br>
+                    {all_steps_text}
+                </div>
+                ''', unsafe_allow_html=True)
+                
+            except nx.NetworkXNoPath:
+                st.error(f"❌ Không tìm thấy đường đi từ {start_node} đến {end_node}!")
+            except Exception as e:
+                st.error(f"Lỗi: {e}")
 
     # --- CODE EULER ---
     with st.expander("📐 PHÂN TÍCH EULER", expanded=False):
